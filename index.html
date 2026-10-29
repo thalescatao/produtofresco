@@ -47,15 +47,15 @@
     .brand-caption { margin: 1px 0 0; color: var(--muted); font-size: 12px; }
     .header-controls { display: flex; align-items: center; justify-content: flex-end; gap: 28px; }
     .curve-controls { display: flex; align-items: stretch; gap: 24px; }
-    .curve-control { display: grid; grid-template-rows: 14px 29px; justify-items: center; gap: 7px; }
+    .curve-control { display: grid; grid-template-rows: 14px 36px; justify-items: center; gap: 7px; }
     .curve-control label { color: var(--muted); font-size: 10px; font-weight: 650; text-align: center; white-space: nowrap; }
     .terminal-input { display: flex; align-items: center; gap: 5px; }
     .terminal-input input { width: 48px; height: 29px; padding: 0 5px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--ink); font-size: 11px; }
     .terminal-input span { color: var(--muted); font-size: 10px; }
     .curvature-control { width: 150px; }
-    .curvature-line { position: relative; display: flex; width: 100%; height: 29px; align-items: center; justify-content: center; color: var(--muted); font-size: 10px; }
-    .curvature-line input { width: 100%; height: 16px; margin: 0; accent-color: #777; }
-    .curvature-value { position: absolute; right: -25px; min-width: 23px; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .curvature-line { position: relative; display: flex; width: 100%; height: 36px; align-items: flex-start; justify-content: center; color: var(--muted); font-size: 10px; }
+    .curvature-line input { width: 100%; height: 16px; margin: 0; transform: translateY(2px); accent-color: #777; }
+    .curvature-value { position: absolute; top: 24px; left: 50%; right: auto; transform: translateX(-50%); min-width: 23px; color: var(--ink); font-variant-numeric: tabular-nums; }
     .range-switch { display: inline-flex; gap: 3px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
     .range-switch button { padding: 7px 13px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 650; cursor: pointer; }
     .range-switch button[aria-pressed="true"] { background: var(--neutral-soft); color: var(--ink); }
@@ -143,14 +143,14 @@
       .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-bottom: 16px; }
       .brand { min-width: 0; }
       .header-controls { display: contents; }
-      .curve-controls { grid-column: 1 / -1; grid-row: 2; display: flex; width: 100%; justify-content: space-between; gap: 8px; }
-      .curve-control { min-width: 0; grid-template-rows: 24px 29px; gap: 4px; }
+      .curve-controls { grid-column: 1 / -1; grid-row: 2; display: flex; width: auto; margin-inline: 12px; justify-content: space-between; gap: 8px; }
+      .curve-control { min-width: 0; grid-template-rows: 24px 36px; gap: 4px; }
       .curve-control label { max-width: 88px; white-space: normal; font-size: 9px; line-height: 1.1; }
       .terminal-input { gap: 3px; }
       .terminal-input input { width: 42px; }
       .terminal-input span { font-size: 9px; }
       .curvature-control { width: 92px; }
-      .curvature-value { right: -22px; }
+      .curvature-value { right: auto; }
       .range-switch { grid-column: 2; grid-row: 1; justify-self: end; }
       .range-switch button { padding: 7px 10px; }
       .chart-panel { padding: 19px 13px 16px; }
@@ -168,6 +168,11 @@
       .chart-panel { min-height: 0; padding: 12px 12px 10px; }
       .chart-wrap { min-height: 0; margin-top: 10px; }
       .chart-legend { margin-top: 6px; }
+    }
+      @media (max-width: 560px) {
+      .curve-controls { margin-inline: 0; gap: 4px; }
+      .curve-control label { max-width: none; white-space: nowrap; font-size: 10px; letter-spacing: normal; }
+      .curvature-control { width: 96px; }
     }
   </style>
 </head>
@@ -436,12 +441,27 @@
         drawChart();
       }
     });
-    document.querySelector('#curvature').addEventListener('input', event => {
+    const curvatureSlider = document.querySelector('#curvature');
+    const curvatureValueDisplay = document.querySelector('#curvature-value');
+    function positionCurvatureValue() {
+      const min = Number(curvatureSlider.min);
+      const max = Number(curvatureSlider.max);
+      const ratio = (Number(curvatureSlider.value) - min) / (max - min);
+      const thumbInset = 8;
+      const usableWidth = Math.max(0, curvatureSlider.clientWidth - thumbInset * 2);
+      curvatureValueDisplay.style.left = (thumbInset + ratio * usableWidth) + 'px';
+    }
+    curvatureSlider.addEventListener('input', event => {
       curvature = Number(event.currentTarget.value);
-      document.querySelector('#curvature-value').textContent = curvature.toFixed(1).replace('.', ',');
+      curvatureValueDisplay.textContent = curvature.toFixed(1).replace('.', ',');
+      positionCurvatureValue();
       drawChart();
     });
-    window.addEventListener('resize', drawChart);
+    window.addEventListener('resize', () => {
+      drawChart();
+      positionCurvatureValue();
+    });
+    positionCurvatureValue();
     renderProducts();
     renderLegend();
     drawChart();
