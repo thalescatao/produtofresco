@@ -117,6 +117,8 @@
       white-space: nowrap;
     }
 
+    .terminal-label-mobile { display: none; }
+
     .terminal-input {
       display: flex;
       align-items: center;
@@ -141,6 +143,23 @@
 
     .curvature-control {
       width: 150px;
+    }
+
+    .subdivision-control {
+      width: 150px;
+    }
+
+    .subdivision-heading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .subdivision-toggle {
+      width: 12px;
+      height: 12px;
+      margin: 0;
+      accent-color: #777;
     }
 
     .curvature-line {
@@ -503,7 +522,6 @@
     .legend-item {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
       padding: 4px 0;
       border: 0;
       background: transparent;
@@ -517,10 +535,8 @@
       text-decoration: line-through;
     }
 
-    .legend-line {
-      width: 17px;
-      height: 3px;
-      border-radius: 3px;
+    .legend-name {
+      font-weight: 600;
     }
 
     .chart-note {
@@ -675,10 +691,10 @@
         grid-column: 1 / -1;
         grid-row: 2;
         display: flex;
-        width: auto;
-        margin-inline: 12px;
+        width: 100%;
+        margin-inline: 0;
         justify-content: space-between;
-        gap: 8px;
+        gap: 4px;
       }
 
       .curve-control {
@@ -693,6 +709,9 @@
         font-size: 9px;
         line-height: 1.1;
       }
+
+      .terminal-label-desktop { display: none; }
+      .terminal-label-mobile { display: inline; }
 
       .terminal-input {
         gap: 3px;
@@ -955,11 +974,11 @@
         <div class="curve-controls">
           <div class="curve-control">
             <label for="freshness-days">Prazo de frescor</label>
-            <div class="terminal-input"><input id="freshness-days" type="number" min="0" max="30" step="1" value="3"
+            <div class="terminal-input"><input id="freshness-days" type="number" min="0" max="30" step="1" value="5"
                 aria-label="Dias em que o preço permanece no máximo após a produção"><span>dias</span></div>
           </div>
           <div class="curve-control">
-            <label for="terminal-days">Prazo terminal de venda</label>
+            <label for="terminal-days"><span class="terminal-label-desktop">Prazo final de venda</span><span class="terminal-label-mobile">Prazo final</span></label>
             <div class="terminal-input"><input id="terminal-days" type="number" min="1" max="14" step="1" value="7"
                 aria-label="Dias antes do fim da prateleira para atingir o preço mínimo"><span>dias</span></div>
           </div>
@@ -968,6 +987,12 @@
             <div class="curvature-line"><input id="curvature" type="range" min="1" max="2.5" step="0.1" value="1.5"
                 aria-label="Fator de curvatura da queda de preço"><span class="curvature-value"
                 id="curvature-value">1,5</span></div>
+          </div>
+          <div class="curve-control curvature-control subdivision-control">
+            <label class="subdivision-heading" for="subdivisions-enabled"><input class="subdivision-toggle" id="subdivisions-enabled" type="checkbox" aria-label="Ativar subdivisões">Subdivisões</label>
+            <div class="curvature-line"><input id="subdivisions" type="range" min="3" max="7" step="1" value="3"
+                aria-label="Número de patamares de preço entre o prazo de frescor e o prazo terminal de venda"><span class="curvature-value"
+                id="subdivisions-value">3</span></div>
           </div>
         </div>
         <div class="range-switch" role="group" aria-label="Período do gráfico">
@@ -1078,9 +1103,11 @@
     const wrap = document.querySelector('#chart-wrap');
     const tooltip = document.querySelector('#tooltip');
     let maxDays = 30;
-    let freshnessDays = 3;
+    let freshnessDays = 5;
     let terminalDays = 7;
     let curvature = 1.5;
+    let subdivisions = 3;
+    let subdivisionsEnabled = false;
     let selected = null;
     let hovered = null;
     let draggedIndex = null;
@@ -1313,13 +1340,14 @@
     }
 
     function renderLegend() {
-      legend.innerHTML = products.map(() => '<button class="legend-item" type="button"><span class="legend-line"></span><span class="legend-name"></span></button>').join('');
+      legend.innerHTML = products.map(() => '<button class="legend-item" type="button"><span class="legend-name"></span></button>').join('');
       legend.querySelectorAll('button').forEach((button, index) => {
         const product = products[index];
         button.dataset.index = index;
         button.setAttribute('aria-pressed', String(visible[index]));
-        button.querySelector('.legend-line').style.background = product.color;
-        button.querySelector('.legend-name').textContent = product.name;
+        const name = button.querySelector('.legend-name');
+        name.textContent = product.name;
+        name.style.color = product.color;
         button.addEventListener('click', () => {
           visible[index] = !visible[index];
           if (!visible[index] && hovered === index) hovered = null;
@@ -1367,6 +1395,28 @@
       return product.max - (product.max - product.min) * curvedProgress;
     }
 
+    function priceSegments(product) {
+      const targetDay = Math.max(0, product.shelf - terminalDays);
+      const curveStart = targetDay > freshnessDays ? freshnessDays : 0;
+      if (targetDay <= curveStart) return [];
+      const count = Math.min(subdivisions, Math.max(1, Math.round(targetDay - curveStart)));
+      const boundaries = Array.from({ length: count + 1 }, (_, index) => {
+        const linearProgress = index / count;
+        const logarithmicProgress = Math.log1p((Math.E - 1) * linearProgress);
+        return Math.round(curveStart + (targetDay - curveStart) * logarithmicProgress);
+      });
+      const segments = [];
+      for (let index = 0; index < count; index++) {
+        const start = boundaries[index];
+        const end = boundaries[index + 1];
+        if (end <= start) continue;
+        let total = 0;
+        for (let day = start; day < end; day++) total += priceAt(product, day + 0.5);
+        segments.push({ start, end, price: total / (end - start) });
+      }
+      return segments;
+    }
+
     function drawChart() {
       const bounds = wrap.getBoundingClientRect();
       const width = Math.max(280, bounds.width);
@@ -1376,15 +1426,21 @@
       const innerW = width - pad.left - pad.right;
       const innerH = height - pad.top - pad.bottom;
       const values = products.length ? products.flatMap(product => [product.max, product.min]) : [0, 1];
-      const minValue = Math.max(0, Math.floor(Math.min(...values) / 10) * 10 - 2);
-      const maxValue = Math.ceil(Math.max(...values) / 10) * 10 + 2;
+      const minValue = Math.max(0, Math.floor(Math.min(...values) / 10) * 10);
+      const maxValue = Math.ceil(Math.max(...values) / 10) * 10;
       const x = day => pad.left + day / maxDays * innerW;
       const y = value => pad.top + (maxValue - value) / (maxValue - minValue || 1) * innerH;
       const moneyTick = value => `R$ ${Math.round(value)}`;
       let markup = '';
 
-      for (let i = 0; i <= 4; i++) {
-        const value = minValue + (maxValue - minValue) * i / 4;
+      for (let value = minValue; value <= maxValue; value += 1) {
+        if (value % 10 === 0) continue;
+        const isFive = value % 5 === 0;
+        const yy = y(value);
+        markup += `<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="var(--chart-grid)" stroke-width="${isFive ? 0.8 : 0.55}" opacity="${isFive ? 0.62 : 0.32}"/>`;
+      }
+
+      for (let value = minValue; value <= maxValue; value += 10) {
         const yy = y(value);
         markup += `<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="var(--chart-grid)" stroke-width="1"/>`;
         markup += `<text x="${pad.left - 10}" y="${yy + 3.5}" fill="var(--chart-muted)" font-size="10" text-anchor="end">${moneyTick(value)}</text>`;
@@ -1403,11 +1459,22 @@
         const hasFocus = focusIndex !== null;
         const emphasized = index === focusIndex;
         const endDay = Math.min(maxDays, product.shelf);
-        const samples = Math.max(2, Math.ceil(endDay * 2));
         let path = '';
-        for (let point = 0; point <= samples; point++) {
-          const day = endDay * point / samples;
-          path += `${point === 0 ? 'M' : 'L'}${x(day).toFixed(2)},${y(priceAt(product, day)).toFixed(2)} `;
+        const segments = subdivisionsEnabled ? priceSegments(product) : [];
+        if (segments.length) {
+          path = `M${x(0).toFixed(2)},${y(product.max).toFixed(2)} L${x(segments[0].start).toFixed(2)},${y(product.max).toFixed(2)} `;
+          segments.forEach((segment, index) => {
+            path += `L${x(segment.start).toFixed(2)},${y(segment.price).toFixed(2)} L${x(segment.end).toFixed(2)},${y(segment.price).toFixed(2)} `;
+            if (index < segments.length - 1) path += `L${x(segment.end).toFixed(2)},${y(segments[index + 1].price).toFixed(2)} `;
+          });
+          const targetDay = Math.max(0, product.shelf - terminalDays);
+          if (targetDay < endDay) path += `L${x(targetDay).toFixed(2)},${y(product.min).toFixed(2)} L${x(endDay).toFixed(2)},${y(product.min).toFixed(2)} `;
+        } else {
+          const samples = Math.max(2, Math.ceil(endDay * 2));
+          for (let point = 0; point <= samples; point++) {
+            const day = endDay * point / samples;
+            path += `${point === 0 ? 'M' : 'L'}${x(day).toFixed(2)},${y(priceAt(product, day)).toFixed(2)} `;
+          }
         }
         markup += `<path data-product="${index}" d="${path}" fill="none" stroke="${product.color}" stroke-width="${hasFocus ? (emphasized ? 3.8 : 2.1) : 2.2}" stroke-linecap="round" stroke-linejoin="round" opacity="${hasFocus ? (emphasized ? 1 : .22) : .77}"/>`;
         if (product.shelf <= maxDays) markup += `<circle data-product="${index}" cx="${x(product.shelf)}" cy="${y(priceAt(product, product.shelf))}" r="3.1" fill="var(--paper)" stroke="${product.color}" stroke-width="2"/>`;
@@ -1438,8 +1505,8 @@
       const chartTop = 15;
       const chartBottom = 39;
       const values = products.length ? products.flatMap(product => [product.max, product.min]) : [0, 1];
-      const minValue = Math.max(0, Math.floor(Math.min(...values) / 10) * 10 - 2);
-      const maxValue = Math.ceil(Math.max(...values) / 10) * 10 + 2;
+      const minValue = Math.max(0, Math.floor(Math.min(...values) / 10) * 10);
+      const maxValue = Math.ceil(Math.max(...values) / 10) * 10;
       const plotHeight = height - chartTop - chartBottom;
       let closest = null;
       let closestDistance = 15;
@@ -1508,11 +1575,31 @@
       positionCurvatureValue();
       drawChart();
     });
+    const subdivisionsSlider = document.querySelector('#subdivisions');
+    const subdivisionsValueDisplay = document.querySelector('#subdivisions-value');
+    function positionSubdivisionsValue() {
+      const ratio = (Number(subdivisionsSlider.value) - Number(subdivisionsSlider.min)) / (Number(subdivisionsSlider.max) - Number(subdivisionsSlider.min));
+      const thumbInset = 8;
+      const usableWidth = Math.max(0, subdivisionsSlider.clientWidth - thumbInset * 2);
+      subdivisionsValueDisplay.style.left = (thumbInset + ratio * usableWidth) + 'px';
+    }
+    subdivisionsSlider.addEventListener('input', event => {
+      subdivisions = Number(event.currentTarget.value);
+      subdivisionsValueDisplay.textContent = String(subdivisions);
+      positionSubdivisionsValue();
+      drawChart();
+    });
+    document.querySelector('#subdivisions-enabled').addEventListener('change', event => {
+      subdivisionsEnabled = event.currentTarget.checked;
+      drawChart();
+    });
     window.addEventListener('resize', () => {
       drawChart();
       positionCurvatureValue();
+      positionSubdivisionsValue();
     });
     positionCurvatureValue();
+    positionSubdivisionsValue();
     renderProducts();
     renderLegend();
     drawChart();
