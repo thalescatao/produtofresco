@@ -1004,13 +1004,13 @@
   </main>
   <script>
     const defaults = [
-      { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#4e8b65' },
-      { name: 'Ovos vermelhos', unit: 'bandeja · 30 unidades', max: 24.90, min: 14.90, shelf: 30, color: '#cb8555' },
-      { name: 'Ovos caipiras', unit: 'bandeja · 20 unidades', max: 29.90, min: 16.90, shelf: 30, color: '#a27a44' },
-      { name: 'Leite fresco', unit: 'garrafa · 1 litro', max: 9.90, min: 4.90, shelf: 30, color: '#6e8fb2' },
-      { name: 'Creme de leite fresco', unit: 'garrafa · 500 ml', max: 29.00, min: 15.90, shelf: 30, color: '#9a82b8' },
-      { name: 'Carne bovina resfriada', unit: 'bandeja · 1 kg', max: 39.90, min: 29.90, shelf: 30, color: '#c76e70' },
-      { name: 'Carne suína resfriada', unit: 'bandeja · 1 kg', max: 24.90, min: 18.90, shelf: 30, color: '#ad6673' }
+      { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#d45d5d' },
+      { name: 'Ovos vermelhos', unit: 'bandeja · 30 unidades', max: 24.90, min: 14.90, shelf: 30, color: '#e3913e' },
+      { name: 'Ovos caipiras', unit: 'bandeja · 20 unidades', max: 29.90, min: 16.90, shelf: 30, color: '#d5b441' },
+      { name: 'Leite fresco', unit: 'garrafa · 1 litro', max: 9.90, min: 4.90, shelf: 30, color: '#55a86b' },
+      { name: 'Creme de leite fresco', unit: 'garrafa · 500 ml', max: 29.00, min: 15.90, shelf: 30, color: '#3c9da6' },
+      { name: 'Carne bovina resfriada', unit: 'bandeja · 1 kg', max: 39.90, min: 29.90, shelf: 30, color: '#527ec0' },
+      { name: 'Carne suína resfriada', unit: 'bandeja · 1 kg', max: 24.90, min: 18.90, shelf: 30, color: '#8d65b4' }
     ];
     const storageKey = 'produto-fresco-itens-v1';
     const presetKey = 'produto-fresco-preset-v1';
@@ -1020,18 +1020,19 @@
       ovos: defaults.slice(0, 3),
       laticinios: [
         defaults[3], defaults[4],
-        { name: 'Manteiga', unit: 'pote · 500 ml', max: 24.90, min: 15.90, shelf: 60, color: '#d2a34f' },
-        { name: 'Requeijão cremoso', unit: 'pote · 200 g', max: 12.90, min: 7.90, shelf: 45, color: '#d2a34f' },
-        { name: 'Iogurte natural integral', unit: 'pote · 500 g', max: 14.90, min: 8.90, shelf: 30, color: '#8a9fbd' }
+        { name: 'Manteiga', unit: 'pote · 500 ml', max: 24.90, min: 15.90, shelf: 60, color: '#d5b441' },
+        { name: 'Requeijão cremoso', unit: 'pote · 200 g', max: 12.90, min: 7.90, shelf: 45, color: '#c45f91' },
+        { name: 'Iogurte natural integral', unit: 'pote · 500 g', max: 14.90, min: 8.90, shelf: 30, color: '#8d65b4' }
       ],
       carne: [
-        { name: 'Acém resfriado', unit: 'bandeja · 1 kg', max: 34.90, min: 25.90, shelf: 30, color: '#c76e70' },
-        { name: 'Alcatra resfriada', unit: 'bandeja · 1 kg', max: 54.90, min: 42.90, shelf: 30, color: '#bd5962' },
-        { name: 'Contrafilé resfriado', unit: 'bandeja · 1 kg', max: 59.90, min: 46.90, shelf: 30, color: '#aa4f59' },
-        { name: 'Patinho resfriado', unit: 'bandeja · 1 kg', max: 49.90, min: 37.90, shelf: 30, color: '#d17b7b' },
-        { name: 'Coxão mole resfriado', unit: 'bandeja · 1 kg', max: 46.90, min: 35.90, shelf: 30, color: '#b86b6b' }
+        { name: 'Acém resfriado', unit: 'bandeja · 1 kg', max: 34.90, min: 25.90, shelf: 30, color: '#3c9da6' },
+        { name: 'Alcatra resfriada', unit: 'bandeja · 1 kg', max: 54.90, min: 42.90, shelf: 30, color: '#e3913e' },
+        { name: 'Contrafilé resfriado', unit: 'bandeja · 1 kg', max: 59.90, min: 46.90, shelf: 30, color: '#d5b441' },
+        { name: 'Patinho resfriado', unit: 'bandeja · 1 kg', max: 49.90, min: 37.90, shelf: 30, color: '#55a86b' },
+        { name: 'Coxão mole resfriado', unit: 'bandeja · 1 kg', max: 46.90, min: 35.90, shelf: 30, color: '#765bb8' }
       ]
     };
+    const namedColors = Object.fromEntries(Object.values(presetProducts).flat().map(product => [product.name, product.color]));
     function presetStorageKey(preset) { return preset === 'geral' ? storageKey : storageKey + '-' + preset; }
     function loadProducts(key, base) {
       try {
@@ -1040,7 +1041,7 @@
           const loaded = saved.map((item, index) => ({
             name: item.name, unit: item.unit,
             max: Number(item.max), min: Number(item.min), shelf: Math.max(1, Number(item.shelf)),
-            color: /^#[0-9a-f]{6}$/i.test(item.color || '') ? item.color : palette[index % palette.length],
+            color: namedColors[item.name] || (/^#[0-9a-f]{6}$/i.test(item.color || '') ? item.color : palette[index % palette.length]),
             visible: item.visible !== false
           }));
           if (key === storageKey + '-carne') {
@@ -1058,13 +1059,14 @@
                 product.shelf = 30;
                 migrated = true;
               }
+              if (namedColors[product.name]) product.color = namedColors[product.name];
             });
             if (migrated) localStorage.setItem(key, JSON.stringify(loaded));
           }
           return loaded;
         }
       } catch (_) {}
-      return base.map((item, index) => ({ ...item, color: item.color || palette[index % palette.length], visible: true }));
+      return base.map((item, index) => ({ ...item, color: namedColors[item.name] || item.color || palette[index % palette.length], visible: true }));
     }
     let activePreset = localStorage.getItem(presetKey) || 'geral';
     if (!presetProducts[activePreset]) activePreset = 'geral';
