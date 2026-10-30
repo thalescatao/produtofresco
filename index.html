@@ -1522,7 +1522,14 @@
       updateProductPanel();
       const active = products.map((product, index) => ({ product, index })).filter(({ index }) => visible[index]);
       tooltip.innerHTML = `<strong>Dia ${Math.round(day)} · preços estimados</strong>` + active.map(({ product, index }) => {
-        const price = priceAt(product, day);
+        const segments = subdivisionsEnabled ? priceSegments(product) : [];
+        const segment = segments.find(item => day >= item.start && day < item.end);
+        const targetDay = Math.max(0, product.shelf - terminalDays);
+        const price = subdivisionsEnabled && day >= targetDay && day <= product.shelf
+          ? product.min
+          : subdivisionsEnabled && segment
+            ? segment.price
+            : priceAt(product, day);
         const focusClass = hovered === index ? ' is-highlighted' : hovered !== null ? ' is-dimmed' : '';
         return `<span class="tooltip-row${focusClass}"><i style="background:${product.color}"></i>${escapeHtml(product.name)}: <b>${price === null ? 'fora do prazo' : money(price)}</b></span>`;
       }).join('');
