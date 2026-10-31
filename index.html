@@ -228,15 +228,16 @@
 
     .range-switch {
       display: inline-flex;
-      gap: 3px;
-      padding: 4px;
+      align-items: center;
+      gap: 2px;
+      padding: 4px 8px 4px 4px;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: var(--paper);
     }
 
     .range-switch button {
-      padding: 7px 13px;
+      padding: 7px 10px;
       border: 0;
       border-radius: 8px;
       background: transparent;
@@ -244,6 +245,13 @@
       font-size: 13px;
       font-weight: 650;
       cursor: pointer;
+    }
+
+    .range-unit {
+      padding-left: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 550;
     }
 
     .range-switch button[aria-pressed="true"] {
@@ -1057,8 +1065,10 @@
           </div>
         </div>
         <div class="range-switch" role="group" aria-label="Período do gráfico">
-          <button type="button" data-range="30" aria-pressed="true">30 dias</button>
-          <button type="button" data-range="60" aria-pressed="false">60 dias</button>
+          <button type="button" data-range="30" aria-pressed="true">30</button>
+          <button type="button" data-range="60" aria-pressed="false">60</button>
+          <button type="button" data-range="90" aria-pressed="false">90</button>
+          <span class="range-unit">dias</span>
         </div>
       </div>
     </header>
@@ -1164,6 +1174,7 @@
     const wrap = document.querySelector('#chart-wrap');
     const tooltip = document.querySelector('#tooltip');
     let maxDays = 30;
+    let rangeProductSignature = null;
     let freshnessDays = 5;
     let terminalDays = 7;
     let curvature = 1.5;
@@ -1477,6 +1488,15 @@
     }
 
     function drawChart() {
+      const productSignature = products.map(product => `${product.name}:${product.shelf}`).join('|');
+      const requiredDays = Math.max(0, ...products.map(product => product.shelf));
+      const fittingRange = requiredDays > 60 ? 90 : requiredDays > 30 ? 60 : 30;
+      if (productSignature !== rangeProductSignature) {
+        rangeProductSignature = productSignature;
+        maxDays = fittingRange;
+        document.querySelectorAll('[data-range]').forEach(button =>
+          button.setAttribute('aria-pressed', String(Number(button.dataset.range) === maxDays)));
+      }
       const bounds = wrap.getBoundingClientRect();
       const width = Math.max(280, bounds.width);
       const height = Math.max(300, bounds.height);
