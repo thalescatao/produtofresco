@@ -1379,6 +1379,13 @@
           event.dataTransfer.setData('text/plain', String(index));
           card.classList.add('is-dragging');
         });
+        card.addEventListener('pointerdown', event => {
+          if (event.target.closest('button, input, select, textarea, [contenteditable="true"]')) {
+            card.draggable = false;
+          }
+        });
+        card.addEventListener('pointerup', () => { card.draggable = true; });
+        card.addEventListener('pointercancel', () => { card.draggable = true; });
         card.addEventListener('dragend', () => {
           draggedIndex = null;
           list.querySelectorAll('.product-card').forEach(item => item.classList.remove('is-dragging', 'is-drop-target'));
