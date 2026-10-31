@@ -74,6 +74,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex: 0 0 auto;
+      min-width: max-content;
     }
 
     .brand-name {
@@ -91,6 +93,8 @@
 
     .header-controls {
       display: flex;
+      min-width: 0;
+      flex: 1 1 auto;
       align-items: center;
       justify-content: flex-end;
       gap: 28px;
@@ -98,18 +102,25 @@
 
     .curve-controls {
       display: flex;
+      min-width: 0;
+      flex: 1 1 auto;
       align-items: stretch;
       gap: 24px;
+      justify-content: flex-end;
     }
 
     .curve-control {
       display: grid;
-      grid-template-rows: 14px 36px;
+      grid-template-rows: 24px 36px;
       justify-items: center;
       gap: 7px;
     }
 
     .curve-control label {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      min-height: 24px;
       color: var(--muted);
       font-size: 10px;
       font-weight: 650;
@@ -118,6 +129,9 @@
     }
 
     .terminal-label-mobile { display: none; }
+
+    .day-slider-control { width: max-content; }
+    .day-slider-control .curvature-line { width: 100%; }
 
     .terminal-input {
       display: flex;
@@ -142,24 +156,44 @@
     }
 
     .curvature-control {
-      width: 150px;
+      width: clamp(88px, 10vw, 150px);
+      flex: 0 1 150px;
     }
 
     .subdivision-control {
-      width: 150px;
+      width: clamp(88px, 10vw, 150px);
+      flex: 0 1 150px;
     }
 
     .subdivision-heading {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      align-items: flex-end;
+      justify-content: center;
+      min-height: 24px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 650;
+      text-align: center;
+      white-space: nowrap;
+      cursor: pointer;
     }
 
-    .subdivision-toggle {
-      width: 12px;
-      height: 12px;
-      margin: 0;
-      accent-color: #777;
+    .subdivision-heading[aria-pressed="false"] {
+      opacity: .48;
+      text-decoration: line-through;
+    }
+
+    .subdivision-heading[aria-pressed="true"] {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .subdivision-control:has(.subdivision-heading[aria-pressed="false"]) #subdivisions {
+      opacity: .38;
     }
 
     .curvature-line {
@@ -519,6 +553,24 @@
       margin: 12px 0 0 54px;
     }
 
+    @media (max-width: 560px) {
+      .chart-legend {
+        position: relative;
+        flex-wrap: nowrap;
+        gap: 14px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        margin-left: 43px;
+        padding: 0 14px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+      }
+
+      .chart-legend::-webkit-scrollbar { display: none; }
+      .legend-item { flex: 0 0 auto; white-space: nowrap; }
+    }
+
     .legend-item {
       display: inline-flex;
       align-items: center;
@@ -576,8 +628,15 @@
       }
 
       .curve-controls {
-        gap: 18px;
+        gap: 10px;
+        justify-content: flex-end;
       }
+
+      .brand { flex: 0 0 auto; min-width: max-content; }
+      .curve-control { flex: 0 1 auto; }
+      .day-slider-control { max-width: 112px; }
+      .curvature-control,
+      .subdivision-control { width: clamp(76px, 12vw, 105px); }
 
       .layout {
         flex: 0 0 auto;
@@ -812,63 +871,69 @@
       }
 
       .chart-legend {
-        margin-top: 6px;
+        margin-top: 12px;
       }
     }
 
     @media (max-width: 560px) {
       .curve-controls {
         margin-inline: 0;
-        gap: 4px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        justify-content: stretch;
       }
 
       .curve-control label {
-        max-width: none;
-        white-space: nowrap;
+        max-width: 100%;
+        white-space: normal;
         font-size: 10px;
+        overflow-wrap: anywhere;
         letter-spacing: normal;
       }
 
+      .subdivision-heading { justify-self: center; }
+
+      .day-slider-control,
       .curvature-control {
-        width: 96px;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .curve-control .curvature-line {
+        width: 100%;
+      }
+
+      .curve-control input[type="range"] {
+        min-width: 0;
       }
     }
       .product-toolbar { display: flex; flex: 0 0 auto; justify-content: flex-end; margin: 0 0 7px; }
     .add-product { padding: 4px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--muted); font-size: 10px; font-weight: 650; cursor: pointer; }
     .add-product:hover { color: var(--ink); border-color: var(--muted); }
-    .product-card { grid-template-columns: 18px 26px minmax(0, 2fr) minmax(0, 1fr); gap: 6px; }
-    .drag-handle { display: grid; width: 18px; min-height: 48px; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: grab; touch-action: none; }
-    .drag-handle:active { cursor: grabbing; }
-    .drag-handle svg { width: 12px; height: 20px; }
+    .product-card { grid-template-columns: 28px minmax(0, 2fr) minmax(0, 1fr); gap: 6px; }
+    .product-card[draggable="true"] { cursor: grab; }
+    .product-card.is-dragging { cursor: grabbing; }
     .item-actions { display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .item-action { display: grid; width: 22px; height: 22px; place-items: center; padding: 3px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
     .item-action:hover { background: color-mix(in srgb, var(--product-color), var(--paper) 82%); color: var(--ink); }
     .item-action[data-action="delete"]:hover { color: #bf4f4f; }
     .item-action svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .product-top { grid-column: 3; }
-    .fields { grid-column: 4; }
+    .product-top { grid-column: 2; }
+    .fields { grid-column: 3; }
     .product-card.is-hidden { opacity: .52; }
     .product-card.is-dragging { opacity: .35; }
     .product-card.is-drop-target { outline: 2px dashed var(--product-color); outline-offset: 2px; }
     .empty-list { padding: 14px 8px; color: var(--muted); font-size: 12px; text-align: center; }
     @media (max-width: 560px) {
-      .product-card { grid-template-columns: 14px 23px minmax(0, 2fr) minmax(0, 1fr); gap: 5px; padding: 6px 7px; }
-      .drag-handle { width: 14px; }
+      .product-card { grid-template-columns: 26px minmax(0, 2fr) minmax(0, 1fr); gap: 5px; padding: 6px 7px; }
       .item-action { width: 20px; height: 20px; }
     }
   .product-card {
-      grid-template-columns: 10px 28px minmax(0, 2fr) minmax(0, 1fr);
+      grid-template-columns: 28px minmax(0, 2fr) minmax(0, 1fr);
       gap: 6px;
-      padding: 6px 7px 6px 0;
+      padding: 6px 7px;
     }
-    .drag-handle {
-      align-self: stretch;
-      width: 10px;
-      min-height: 0;
-      height: 100%;
-      border-radius: 0 5px 5px 0;
-    }
-    .drag-handle svg { width: 8px; height: 66%; min-height: 48px; }
     .item-actions { gap: 3px; }
     .item-action {
       width: 28px;
@@ -885,12 +950,10 @@
     .product-title { width: 100%; text-align: center; }
     @media (max-width: 560px) {
   .product-card {
-        grid-template-columns: 9px 26px minmax(0, 2fr) minmax(0, 1fr);
+        grid-template-columns: 26px minmax(0, 2fr) minmax(0, 1fr);
         gap: 4px;
-        padding: 5px 5px 5px 0;
+        padding: 5px;
       }
-      .drag-handle { width: 9px; }
-      .drag-handle svg { width: 8px; }
       .item-action { width: 26px; height: 28px; }
       .input-wrap { padding-right: 5px; padding-left: 2px; }
       .input-wrap input { font-size: 12px; }
@@ -949,12 +1012,12 @@
     }
     .product-title.is-editing .product-name:focus,
     .product-title.is-editing .product-unit:focus { outline: 2px solid var(--product-color); }
-      .product-card { grid-template-columns: 10px 30px minmax(0, 2fr) minmax(0, 1fr); }
+      .product-card { grid-template-columns: 28px minmax(0, 2fr) minmax(0, 1fr); }
     .item-action { width: 30px; height: 30px; flex: 0 0 30px; }
     .item-actions { gap: 3px; }
     .product-toolbar { grid-template-columns: 10px 30px minmax(0, 2fr) minmax(0, 1fr); }
     @media (max-width: 560px) {
-      .product-card { grid-template-columns: 9px 30px minmax(0, 2fr) minmax(0, 1fr); }
+      .product-card { grid-template-columns: 26px minmax(0, 2fr) minmax(0, 1fr); }
       .product-toolbar { grid-template-columns: 9px 30px minmax(0, 2fr) minmax(0, 1fr); }
       .item-action { width: 30px; height: 30px; flex-basis: 30px; }
     }
@@ -973,14 +1036,12 @@
       <div class="header-controls">
         <div class="curve-controls">
           <div class="curve-control">
-            <label for="freshness-days">Prazo de frescor</label>
-            <div class="terminal-input"><input id="freshness-days" type="number" min="0" max="30" step="1" value="5"
-                aria-label="Dias em que o preço permanece no máximo após a produção"><span>dias</span></div>
+            <label for="freshness-days">Período de frescor</label>
+            <div class="curvature-line"><input id="freshness-days" type="range" min="3" max="15" step="1" value="5" aria-label="Dias em que o preço permanece no máximo após a produção"><span class="curvature-value" id="freshness-days-value">5</span></div>
           </div>
           <div class="curve-control">
             <label for="terminal-days"><span class="terminal-label-desktop">Prazo final de venda</span><span class="terminal-label-mobile">Prazo final</span></label>
-            <div class="terminal-input"><input id="terminal-days" type="number" min="1" max="14" step="1" value="7"
-                aria-label="Dias antes do fim da prateleira para atingir o preço mínimo"><span>dias</span></div>
+            <div class="curvature-line"><input id="terminal-days" type="range" min="5" max="10" step="1" value="7" aria-label="Dias antes do fim da prateleira para atingir o preço mínimo"><span class="curvature-value" id="terminal-days-value">7</span></div>
           </div>
           <div class="curve-control curvature-control">
             <label for="curvature">Fator de curvatura</label>
@@ -989,8 +1050,8 @@
                 id="curvature-value">1,5</span></div>
           </div>
           <div class="curve-control curvature-control subdivision-control">
-            <label class="subdivision-heading" for="subdivisions-enabled"><input class="subdivision-toggle" id="subdivisions-enabled" type="checkbox" aria-label="Ativar subdivisões">Subdivisões</label>
-            <div class="curvature-line"><input id="subdivisions" type="range" min="3" max="7" step="1" value="3"
+            <button class="subdivision-heading" id="subdivisions-enabled" type="button" aria-pressed="false">Subdivisões</button>
+            <div class="curvature-line"><input id="subdivisions" type="range" min="2" max="7" step="1" value="3"
                 aria-label="Número de patamares de preço entre o prazo de frescor e o prazo terminal de venda"><span class="curvature-value"
                 id="subdivisions-value">3</span></div>
           </div>
@@ -1162,10 +1223,7 @@
         return;
       }
       list.innerHTML = products.map(() => `
-        <article class="product-card">
-          <button class="drag-handle" type="button" draggable="true" aria-label="Arraste para reordenar" title="Arraste para reordenar">
-            <svg viewBox="0 0 12 100" preserveAspectRatio="none" aria-hidden="true"><circle cx="3" cy="2" r="1.2" fill="currentColor"/><circle cx="9" cy="2" r="1.2" fill="currentColor"/><circle cx="3" cy="18" r="1.2" fill="currentColor"/><circle cx="9" cy="18" r="1.2" fill="currentColor"/><circle cx="3" cy="34" r="1.2" fill="currentColor"/><circle cx="9" cy="34" r="1.2" fill="currentColor"/><circle cx="3" cy="50" r="1.2" fill="currentColor"/><circle cx="9" cy="50" r="1.2" fill="currentColor"/><circle cx="3" cy="66" r="1.2" fill="currentColor"/><circle cx="9" cy="66" r="1.2" fill="currentColor"/><circle cx="3" cy="82" r="1.2" fill="currentColor"/><circle cx="9" cy="82" r="1.2" fill="currentColor"/><circle cx="3" cy="98" r="1.2" fill="currentColor"/><circle cx="9" cy="98" r="1.2" fill="currentColor"/></svg>
-          </button>
+        <article class="product-card" draggable="true">
           <div class="item-actions">
             <button class="item-action" type="button" data-action="rename" title="Renomear"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.8 4.2 15.8 7.2M3.5 16.5l3.7-.8 8.4-8.4a2.1 2.1 0 0 0-3-3l-8.4 8.4-.7 3.8Z"/></svg></button>
             <button class="item-action" type="button" data-action="visibility"><svg viewBox="0 0 20 20" aria-hidden="true"></svg></button>
@@ -1185,7 +1243,6 @@
         card.style.setProperty('--product-color', product.color);
         card.querySelector('.product-name').textContent = product.name;
         card.querySelector('.product-unit').textContent = product.unit;
-        card.querySelector('.drag-handle').setAttribute('aria-label', 'Arraste para reordenar ' + product.name);
         card.querySelector('[data-action="rename"]').setAttribute('aria-label', 'Renomear ' + product.name);
         card.querySelector('[data-action="delete"]').setAttribute('aria-label', 'Excluir ' + product.name);
         card.querySelectorAll('input').forEach(input => {
@@ -1243,7 +1300,6 @@
           title.classList.remove('is-editing');
           card.classList.remove('is-editing');
           setRenameIcon(false);
-          card.querySelector('.drag-handle').setAttribute('aria-label', 'Arraste para reordenar ' + product.name);
           card.querySelector('[data-action="delete"]').setAttribute('aria-label', 'Excluir ' + product.name);
           saveProducts();
           renderLegend();
@@ -1302,14 +1358,17 @@
           drawChart();
         });
 
-        const handle = card.querySelector('.drag-handle');
-        handle.addEventListener('dragstart', event => {
+        card.addEventListener('dragstart', event => {
+          if (event.target.closest('button, input, select, textarea, [contenteditable="true"]')) {
+            event.preventDefault();
+            return;
+          }
           draggedIndex = index;
           event.dataTransfer.effectAllowed = 'move';
           event.dataTransfer.setData('text/plain', String(index));
           card.classList.add('is-dragging');
         });
-        handle.addEventListener('dragend', () => {
+        card.addEventListener('dragend', () => {
           draggedIndex = null;
           list.querySelectorAll('.product-card').forEach(item => item.classList.remove('is-dragging', 'is-drop-target'));
         });
@@ -1422,7 +1481,7 @@
       const width = Math.max(280, bounds.width);
       const height = Math.max(300, bounds.height);
       const mobile = width < 500;
-      const pad = { top: 15, right: mobile ? 18 : 195, bottom: mobile ? 56 : 39, left: mobile ? 49 : 61 };
+      const pad = { top: 15, right: mobile ? 18 : 195, bottom: mobile ? 42 : 39, left: mobile ? 49 : 61 };
       const innerW = width - pad.left - pad.right;
       const innerH = height - pad.top - pad.bottom;
       const values = products.length ? products.flatMap(product => [product.max, product.min]) : [0, 1];
@@ -1451,7 +1510,7 @@
         markup += `<line x1="${xx}" y1="${pad.top}" x2="${xx}" y2="${height - pad.bottom}" stroke="var(--chart-grid)" stroke-width="1"/>`;
         markup += `<text x="${xx}" y="${mobile ? height - pad.bottom + 14 : height - 14}" fill="var(--chart-muted)" font-size="10" text-anchor="middle">${day}</text>`;
       }
-      markup += mobile ? `<text x="${pad.left + innerW / 2}" y="${height - 4}" fill="var(--chart-muted)" font-size="10" text-anchor="middle">Dias desde a produção</text>` : `<text x="${x(maxDays) + 8}" y="${height - 14}" fill="var(--chart-muted)" font-size="10" text-anchor="start">Dias desde a produção</text>`;
+      markup += mobile ? `<text x="${pad.left + innerW / 2}" y="${height - 14}" fill="var(--chart-muted)" font-size="10" text-anchor="middle">Dias desde a produção</text>` : `<text x="${x(maxDays) + 8}" y="${height - 14}" fill="var(--chart-muted)" font-size="10" text-anchor="start">Dias desde a produção</text>`;
 
       products.forEach((product, index) => {
         if (!visible[index]) return;
@@ -1552,19 +1611,28 @@
       document.querySelectorAll('[data-range]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
       drawChart();
     }));
-    document.querySelector('#terminal-days').addEventListener('input', event => {
-      const value = Number(event.currentTarget.value);
-      if (Number.isFinite(value) && value >= 1) {
-        terminalDays = Math.min(14, Math.round(value));
-        drawChart();
-      }
+    const terminalDaysSlider = document.querySelector('#terminal-days');
+    const terminalDaysValueDisplay = document.querySelector('#terminal-days-value');
+    const freshnessDaysSlider = document.querySelector('#freshness-days');
+    const freshnessDaysValueDisplay = document.querySelector('#freshness-days-value');
+    function positionSliderValue(slider, display) {
+      const ratio = (Number(slider.value) - Number(slider.min)) / (Number(slider.max) - Number(slider.min));
+      const lineRect = slider.parentElement.getBoundingClientRect();
+      const sliderRect = slider.getBoundingClientRect();
+      const thumbCenter = sliderRect.left - lineRect.left + 8 + Math.max(0, sliderRect.width - 16) * ratio;
+      display.style.left = `${thumbCenter}px`;
+    }
+    terminalDaysSlider.addEventListener('input', event => {
+      terminalDays = Number(event.currentTarget.value);
+      terminalDaysValueDisplay.textContent = String(terminalDays);
+      positionSliderValue(terminalDaysSlider, terminalDaysValueDisplay);
+      drawChart();
     });
-    document.querySelector('#freshness-days').addEventListener('input', event => {
-      const value = Number(event.currentTarget.value);
-      if (Number.isFinite(value) && value >= 0) {
-        freshnessDays = Math.min(30, Math.round(value));
-        drawChart();
-      }
+    freshnessDaysSlider.addEventListener('input', event => {
+      freshnessDays = Number(event.currentTarget.value);
+      freshnessDaysValueDisplay.textContent = String(freshnessDays);
+      positionSliderValue(freshnessDaysSlider, freshnessDaysValueDisplay);
+      drawChart();
     });
     const curvatureSlider = document.querySelector('#curvature');
     const curvatureValueDisplay = document.querySelector('#curvature-value');
@@ -1572,9 +1640,10 @@
       const min = Number(curvatureSlider.min);
       const max = Number(curvatureSlider.max);
       const ratio = (Number(curvatureSlider.value) - min) / (max - min);
-      const thumbInset = 8;
-      const usableWidth = Math.max(0, curvatureSlider.clientWidth - thumbInset * 2);
-      curvatureValueDisplay.style.left = (thumbInset + ratio * usableWidth) + 'px';
+      const lineRect = curvatureSlider.parentElement.getBoundingClientRect();
+      const sliderRect = curvatureSlider.getBoundingClientRect();
+      const thumbCenter = sliderRect.left - lineRect.left + 8 + Math.max(0, sliderRect.width - 16) * ratio;
+      curvatureValueDisplay.style.left = `${thumbCenter}px`;
     }
     curvatureSlider.addEventListener('input', event => {
       curvature = Number(event.currentTarget.value);
@@ -1586,18 +1655,22 @@
     const subdivisionsValueDisplay = document.querySelector('#subdivisions-value');
     function positionSubdivisionsValue() {
       const ratio = (Number(subdivisionsSlider.value) - Number(subdivisionsSlider.min)) / (Number(subdivisionsSlider.max) - Number(subdivisionsSlider.min));
-      const thumbInset = 8;
-      const usableWidth = Math.max(0, subdivisionsSlider.clientWidth - thumbInset * 2);
-      subdivisionsValueDisplay.style.left = (thumbInset + ratio * usableWidth) + 'px';
+      const lineRect = subdivisionsSlider.parentElement.getBoundingClientRect();
+      const sliderRect = subdivisionsSlider.getBoundingClientRect();
+      const thumbCenter = sliderRect.left - lineRect.left + 8 + Math.max(0, sliderRect.width - 16) * ratio;
+      subdivisionsValueDisplay.style.left = `${thumbCenter}px`;
     }
+    positionSliderValue(terminalDaysSlider, terminalDaysValueDisplay);
+    positionSliderValue(freshnessDaysSlider, freshnessDaysValueDisplay);
     subdivisionsSlider.addEventListener('input', event => {
       subdivisions = Number(event.currentTarget.value);
       subdivisionsValueDisplay.textContent = String(subdivisions);
       positionSubdivisionsValue();
       drawChart();
     });
-    document.querySelector('#subdivisions-enabled').addEventListener('change', event => {
-      subdivisionsEnabled = event.currentTarget.checked;
+    document.querySelector('#subdivisions-enabled').addEventListener('click', event => {
+      subdivisionsEnabled = !subdivisionsEnabled;
+      event.currentTarget.setAttribute('aria-pressed', String(subdivisionsEnabled));
       drawChart();
     });
     window.addEventListener('resize', () => {
