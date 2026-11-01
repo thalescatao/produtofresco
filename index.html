@@ -1607,8 +1607,16 @@
       let closestDistance = 15;
       products.forEach((product, index) => {
         if (!visible[index]) return;
-        const price = priceAt(product, day);
-        if (price === null) return;
+        const rawPrice = priceAt(product, day);
+        if (rawPrice === null) return;
+        const targetDay = Math.max(0, product.shelf - terminalDays);
+        const segments = subdivisionsEnabled ? priceSegments(product) : [];
+        const segment = segments.find(item => day >= item.start && day < item.end);
+        const price = subdivisionsEnabled && day >= targetDay
+          ? product.min
+          : subdivisionsEnabled && segment
+            ? segment.price
+            : rawPrice;
         const lineY = chartTop + (maxValue - price) / (maxValue - minValue || 1) * plotHeight;
         const distance = Math.abs(event.clientY - box.top - lineY);
         if (distance < closestDistance) { closest = index; closestDistance = distance; }
