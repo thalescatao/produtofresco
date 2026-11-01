@@ -1563,7 +1563,7 @@
           }
         }
         markup += `<path data-product="${index}" d="${path}" fill="none" stroke="${product.color}" stroke-width="${hasFocus ? (emphasized ? 3.8 : 2.1) : 2.2}" stroke-linecap="round" stroke-linejoin="round" opacity="${hasFocus ? (emphasized ? 1 : .22) : .77}"/>`;
-        if (product.shelf <= maxDays) markup += `<circle data-product="${index}" cx="${x(product.shelf)}" cy="${y(priceAt(product, product.shelf))}" r="3.1" fill="var(--paper)" stroke="${product.color}" stroke-width="2"/>`;
+        if (product.shelf <= maxDays) markup += `<circle data-product="${index}" cx="${x(product.shelf)}" cy="${y(priceAt(product, product.shelf))}" r="3.1" fill="var(--paper)" stroke="${product.color}" stroke-width="2" opacity="${hasFocus ? (emphasized ? 1 : .22) : .77}"/>`;
       });
       chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
       chart.innerHTML = markup;
