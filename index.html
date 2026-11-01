@@ -367,11 +367,19 @@
       min-width: 0;
       align-items: flex-start;
       gap: 9px;
+      position: relative;
+      align-self: stretch;
+      align-items: center;
     }
 
     .product-title {
+      display: grid;
+      height: 100%;
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      align-items: center;
       min-width: 0;
       flex: 1;
+      position: static;
     }
 
     .product-name {
@@ -385,10 +393,32 @@
 
     .product-unit {
       display: block;
-      margin-top: 2px;
+      margin-top: -3px;
       color: var(--muted);
       font-size: 12px;
     }
+
+    .freeze-params {
+      display: flex;
+      width: 26px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      position: static;
+      justify-self: center;
+      align-self: center;
+      transform: none;
+      margin: 0;
+      padding: 2px;
+      border: 0;
+      background: transparent;
+      color: var(--product-color);
+      opacity: .42;
+      cursor: pointer;
+    }
+    .freeze-params:hover,
+    .freeze-params[aria-pressed="true"] { opacity: 1; }
+    .freeze-params svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .fields {
       display: grid;
       grid-template-columns: 1fr;
@@ -954,7 +984,7 @@
     .item-action:hover { border-color: var(--muted); }
     .input-wrap { height: 30px; padding: 0 6px 0 3px; }
     .input-wrap input { font-size: 12px; }
-    .product-top { align-self: stretch; align-items: center; justify-content: center; text-align: center; }
+    .product-top { justify-content: center; text-align: center; }
     .product-title { width: 100%; text-align: center; }
     @media (max-width: 560px) {
   .product-card {
@@ -1141,6 +1171,7 @@
             name: item.name, unit: item.unit,
             max: Number(item.max), min: Number(item.min), shelf: Math.max(1, Number(item.shelf)),
             color: namedColors[item.name] || (/^#[0-9a-f]{6}$/i.test(item.color || '') ? item.color : palette[index % palette.length]),
+            curveParams: item.curveParams && typeof item.curveParams === 'object' ? item.curveParams : null,
             visible: item.visible !== false
           }));
           if (key === storageKey + '-carne') {
@@ -1186,6 +1217,8 @@
     let selected = null;
     let hovered = null;
     let draggedIndex = null;
+    const undoHistory = [];
+    let pendingFieldSnapshot = null;
     const money = value => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
     const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 
@@ -1195,6 +1228,32 @@
         localStorage.setItem(presetKey, activePreset);
       } catch (_) {}
     }
+
+    function rememberProducts() {
+      undoHistory.push({ preset: activePreset, products: JSON.parse(JSON.stringify(products)), visible: [...visible] });
+      if (undoHistory.length > 50) undoHistory.shift();
+    }
+
+    function undoProductChange() {
+      const previous = undoHistory.pop();
+      if (!previous) return;
+      activePreset = previous.preset;
+      presetSelect.value = activePreset;
+      products.splice(0, products.length, ...previous.products);
+      visible.splice(0, visible.length, ...previous.visible);
+      selected = hovered = null;
+      saveProducts();
+      renderProducts();
+      renderLegend();
+      drawChart();
+    }
+
+    document.addEventListener('keydown', event => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z') return;
+      if (event.target.matches('input, textarea, [contenteditable="true"]')) return;
+      event.preventDefault();
+      undoProductChange();
+    });
 
     function saveCurveSettings() {
       try {
@@ -1249,7 +1308,7 @@
             <button class="item-action" type="button" data-action="visibility"><svg viewBox="0 0 20 20" aria-hidden="true"></svg></button>
             <button class="item-action" type="button" data-action="delete" title="Excluir"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M7 5.5V3.7h6v1.8m2.2 0-.7 10.8H5.5L4.8 5.5M8 8.5v5.2m4-5.2v5.2"/></svg></button>
           </div>
-          <div class="product-top"><span class="product-title"><span class="product-name"></span><span class="product-unit"></span></span></div>
+          <div class="product-top"><span class="product-title"><span class="product-name"></span><span class="product-unit"></span><button class="freeze-params" type="button" data-action="freeze-params" aria-pressed="false" aria-label="Congelar parâmetros deste item" title="Congelar parâmetros deste item"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v16M3.1 6l13.8 8M3.1 14l13.8-8M7.5 3.5 10 5l2.5-1.5M7.5 16.5 10 15l2.5 1.5M2.8 8.5 5.5 8 6 5.5M14 14.5l.5-2.5 2.7-.5M2.8 11.5l2.7.5.5 2.5M14 5.5l.5 2.5 2.7.5"/></svg></button></span></div>
           <div class="fields">
             <div class="field"><div class="input-wrap"><span class="prefix">R$</span><input data-key="max" type="number" min="0" step="0.50"><span class="suffix">máx</span></div></div>
             <div class="field"><div class="input-wrap"><span class="prefix">R$</span><input data-key="min" type="number" min="0" step="0.50"><span class="suffix">mín</span></div></div>
@@ -1263,6 +1322,17 @@
         card.style.setProperty('--product-color', product.color);
         card.querySelector('.product-name').textContent = product.name;
         card.querySelector('.product-unit').textContent = product.unit;
+        const freezeButton = card.querySelector('[data-action="freeze-params"]');
+        freezeButton.setAttribute('aria-pressed', String(Boolean(product.curveParams)));
+        freezeButton.setAttribute('aria-label', product.curveParams ? 'Descongelar parâmetros deste item' : 'Congelar parâmetros deste item');
+        freezeButton.title = product.curveParams ? 'Parâmetros congelados neste item' : 'Congelar parâmetros deste item';
+        freezeButton.addEventListener('click', event => {
+          event.stopPropagation();
+          product.curveParams = product.curveParams ? null : { freshnessDays, terminalDays, curvature, subdivisions, subdivisionsEnabled };
+          saveProducts();
+          renderProducts();
+          drawChart();
+        });
         card.querySelector('[data-action="rename"]').setAttribute('aria-label', 'Renomear ' + product.name);
         card.querySelector('[data-action="delete"]').setAttribute('aria-label', 'Excluir ' + product.name);
         card.querySelectorAll('input').forEach(input => {
@@ -1270,6 +1340,9 @@
           input.id = key + '-' + index;
           input.dataset.index = index;
           input.value = key === 'shelf' ? String(product[key]) : Number(product[key]).toFixed(2);
+          input.addEventListener('focus', () => {
+            if (!pendingFieldSnapshot) pendingFieldSnapshot = { preset: activePreset, products: JSON.parse(JSON.stringify(products)), visible: [...visible] };
+          });
           input.setAttribute('aria-label', (key === 'max' ? 'Preço máximo de ' : key === 'min' ? 'Preço mínimo de ' : 'Tempo de prateleira de ') + product.name);
           input.addEventListener('input', event => {
             const value = Number(event.currentTarget.value);
@@ -1277,6 +1350,12 @@
             product[key] = key === 'shelf' ? Math.max(1, value) : value;
             saveProducts();
             drawChart();
+          });
+          input.addEventListener('blur', () => {
+            if (!pendingFieldSnapshot) return;
+            undoHistory.push(pendingFieldSnapshot);
+            pendingFieldSnapshot = null;
+            if (undoHistory.length > 50) undoHistory.shift();
           });
         });
         const visibilityButton = card.querySelector('[data-action="visibility"]');
@@ -1309,6 +1388,8 @@
             nameField.textContent = editOriginal.name;
             unitField.textContent = editOriginal.unit;
           }
+          const changed = nameField.textContent.trim() !== editOriginal.name || unitField.textContent.trim() !== editOriginal.unit;
+          if (changed && !cancel) rememberProducts();
           product.name = nameField.textContent.trim() || editOriginal.name;
           product.unit = unitField.textContent.trim() || editOriginal.unit;
           nameField.textContent = product.name;
@@ -1368,6 +1449,7 @@
         });
         card.querySelector('[data-action="delete"]').addEventListener('click', event => {
           event.stopPropagation();
+          rememberProducts();
           products.splice(index, 1);
           visible.splice(index, 1);
           selected = null;
@@ -1410,6 +1492,7 @@
           const from = Number(event.dataTransfer.getData('text/plain'));
           const to = Number(card.dataset.card);
           if (!Number.isInteger(from) || !Number.isInteger(to) || from === to) return;
+          rememberProducts();
           const [movedProduct] = products.splice(from, 1);
           const [movedVisible] = visible.splice(from, 1);
           products.splice(to, 0, movedProduct);
@@ -1450,6 +1533,7 @@
       event.stopPropagation();
       const name = window.prompt('Nome do novo item:');
       if (name === null || !name.trim()) return;
+      rememberProducts();
       products.push({ name: name.trim(), unit: 'unidade', max: 0, min: 0, shelf: 7, color: palette[products.length % palette.length] });
       visible.push(true);
       selected = null;
@@ -1472,20 +1556,22 @@
     });
     function priceAt(product, day) {
       if (day > product.shelf) return null;
-      const targetDay = Math.max(0, product.shelf - terminalDays);
+      const params = product.curveParams || { freshnessDays, terminalDays, curvature };
+      const targetDay = Math.max(0, product.shelf - params.terminalDays);
       if (targetDay === 0) return product.min;
-      if (targetDay > freshnessDays && day <= freshnessDays) return product.max;
-      const curveStart = targetDay > freshnessDays ? freshnessDays : 0;
+      if (targetDay > params.freshnessDays && day <= params.freshnessDays) return product.max;
+      const curveStart = targetDay > params.freshnessDays ? params.freshnessDays : 0;
       const progress = Math.min(1, Math.max(0, (day - curveStart) / Math.max(0.01, targetDay - curveStart)));
-      const curvedProgress = Math.pow(progress, curvature);
+      const curvedProgress = Math.pow(progress, params.curvature);
       return product.max - (product.max - product.min) * curvedProgress;
     }
 
     function priceSegments(product) {
-      const targetDay = Math.max(0, product.shelf - terminalDays);
-      const curveStart = targetDay > freshnessDays ? freshnessDays : 0;
+      const params = product.curveParams || { freshnessDays, terminalDays, curvature, subdivisions, subdivisionsEnabled };
+      const targetDay = Math.max(0, product.shelf - params.terminalDays);
+      const curveStart = targetDay > params.freshnessDays ? params.freshnessDays : 0;
       if (targetDay <= curveStart) return [];
-      const count = Math.min(subdivisions, Math.max(1, Math.round(targetDay - curveStart)));
+      const count = Math.min(params.subdivisions, Math.max(1, Math.round(targetDay - curveStart)));
       const boundaries = Array.from({ length: count + 1 }, (_, index) => {
         const linearProgress = index / count;
         const logarithmicProgress = Math.log1p((Math.E - 1) * linearProgress);
@@ -1501,6 +1587,10 @@
         segments.push({ start, end, price: total / (end - start) });
       }
       return segments;
+    }
+
+    function usesSubdivisions(product) {
+      return product.curveParams ? product.curveParams.subdivisionsEnabled === true : subdivisionsEnabled;
     }
 
     function drawChart() {
@@ -1555,14 +1645,15 @@
         const emphasized = index === focusIndex;
         const endDay = Math.min(maxDays, product.shelf);
         let path = '';
-        const segments = subdivisionsEnabled ? priceSegments(product) : [];
+        const segments = usesSubdivisions(product) ? priceSegments(product) : [];
         if (segments.length) {
           path = `M${x(0).toFixed(2)},${y(product.max).toFixed(2)} L${x(segments[0].start).toFixed(2)},${y(product.max).toFixed(2)} `;
           segments.forEach((segment, index) => {
             path += `L${x(segment.start).toFixed(2)},${y(segment.price).toFixed(2)} L${x(segment.end).toFixed(2)},${y(segment.price).toFixed(2)} `;
             if (index < segments.length - 1) path += `L${x(segment.end).toFixed(2)},${y(segments[index + 1].price).toFixed(2)} `;
           });
-          const targetDay = Math.max(0, product.shelf - terminalDays);
+          const params = product.curveParams || { terminalDays };
+          const targetDay = Math.max(0, product.shelf - params.terminalDays);
           if (targetDay < endDay) path += `L${x(targetDay).toFixed(2)},${y(product.min).toFixed(2)} L${x(endDay).toFixed(2)},${y(product.min).toFixed(2)} `;
         } else {
           const samples = Math.max(2, Math.ceil(endDay * 2));
@@ -1609,12 +1700,14 @@
         if (!visible[index]) return;
         const rawPrice = priceAt(product, day);
         if (rawPrice === null) return;
-        const targetDay = Math.max(0, product.shelf - terminalDays);
-        const segments = subdivisionsEnabled ? priceSegments(product) : [];
+        const params = product.curveParams || { terminalDays };
+        const targetDay = Math.max(0, product.shelf - params.terminalDays);
+        const hasSubdivisions = usesSubdivisions(product);
+        const segments = hasSubdivisions ? priceSegments(product) : [];
         const segment = segments.find(item => day >= item.start && day < item.end);
-        const price = subdivisionsEnabled && day >= targetDay
+        const price = hasSubdivisions && day >= targetDay
           ? product.min
-          : subdivisionsEnabled && segment
+          : hasSubdivisions && segment
             ? segment.price
             : rawPrice;
         const lineY = chartTop + (maxValue - price) / (maxValue - minValue || 1) * plotHeight;
@@ -1625,12 +1718,14 @@
       updateProductPanel();
       const active = products.map((product, index) => ({ product, index })).filter(({ index }) => visible[index]);
       tooltip.innerHTML = `<strong>Dia ${Math.round(day)} · preços estimados</strong>` + active.map(({ product, index }) => {
-        const segments = subdivisionsEnabled ? priceSegments(product) : [];
+        const hasSubdivisions = usesSubdivisions(product);
+        const segments = hasSubdivisions ? priceSegments(product) : [];
         const segment = segments.find(item => day >= item.start && day < item.end);
-        const targetDay = Math.max(0, product.shelf - terminalDays);
-        const price = subdivisionsEnabled && day >= targetDay && day <= product.shelf
+        const params = product.curveParams || { terminalDays };
+        const targetDay = Math.max(0, product.shelf - params.terminalDays);
+        const price = hasSubdivisions && day >= targetDay && day <= product.shelf
           ? product.min
-          : subdivisionsEnabled && segment
+          : hasSubdivisions && segment
             ? segment.price
             : priceAt(product, day);
         const focusClass = hovered === index ? ' is-highlighted' : hovered !== null ? ' is-dimmed' : '';
