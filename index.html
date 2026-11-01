@@ -1692,6 +1692,16 @@
     });
     const subdivisionsSlider = document.querySelector('#subdivisions');
     const subdivisionsValueDisplay = document.querySelector('#subdivisions-value');
+    const subdivisionsToggle = document.querySelector('#subdivisions-enabled');
+    freshnessDaysSlider.value = String(freshnessDays);
+    terminalDaysSlider.value = String(terminalDays);
+    curvatureSlider.value = String(curvature);
+    subdivisionsSlider.value = String(subdivisions);
+    freshnessDaysValueDisplay.textContent = String(freshnessDays);
+    terminalDaysValueDisplay.textContent = String(terminalDays);
+    curvatureValueDisplay.textContent = curvature.toFixed(1).replace('.', ',');
+    subdivisionsValueDisplay.textContent = String(subdivisions);
+    subdivisionsToggle.setAttribute('aria-pressed', String(subdivisionsEnabled));
     function positionSubdivisionsValue() {
       const ratio = (Number(subdivisionsSlider.value) - Number(subdivisionsSlider.min)) / (Number(subdivisionsSlider.max) - Number(subdivisionsSlider.min));
       const lineRect = subdivisionsSlider.parentElement.getBoundingClientRect();
@@ -1708,7 +1718,7 @@
       saveCurveSettings();
       drawChart();
     });
-    document.querySelector('#subdivisions-enabled').addEventListener('click', event => {
+    subdivisionsToggle.addEventListener('click', event => {
       subdivisionsEnabled = !subdivisionsEnabled;
       event.currentTarget.setAttribute('aria-pressed', String(subdivisionsEnabled));
       saveCurveSettings();
