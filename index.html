@@ -1110,6 +1110,9 @@
     ];
     const storageKey = 'produto-fresco-itens-v1';
     const presetKey = 'produto-fresco-preset-v1';
+    const curveSettingsKey = 'produto-fresco-curva-v1';
+    let savedCurveSettings = {};
+    try { savedCurveSettings = JSON.parse(localStorage.getItem(curveSettingsKey) || '{}') || {}; } catch (_) {}
     const palette = defaults.map(item => item.color);
     const presetProducts = {
       geral: defaults,
@@ -1175,11 +1178,11 @@
     const tooltip = document.querySelector('#tooltip');
     let maxDays = 30;
     let rangeProductSignature = null;
-    let freshnessDays = 5;
-    let terminalDays = 7;
-    let curvature = 1.5;
-    let subdivisions = 3;
-    let subdivisionsEnabled = false;
+    let freshnessDays = Number.isInteger(savedCurveSettings.freshnessDays) && savedCurveSettings.freshnessDays >= 3 && savedCurveSettings.freshnessDays <= 15 ? savedCurveSettings.freshnessDays : 5;
+    let terminalDays = Number.isInteger(savedCurveSettings.terminalDays) && savedCurveSettings.terminalDays >= 5 && savedCurveSettings.terminalDays <= 10 ? savedCurveSettings.terminalDays : 7;
+    let curvature = Number.isFinite(savedCurveSettings.curvature) && savedCurveSettings.curvature >= 1 && savedCurveSettings.curvature <= 2.5 ? savedCurveSettings.curvature : 1.5;
+    let subdivisions = Number.isInteger(savedCurveSettings.subdivisions) && savedCurveSettings.subdivisions >= 2 && savedCurveSettings.subdivisions <= 7 ? savedCurveSettings.subdivisions : 3;
+    let subdivisionsEnabled = savedCurveSettings.subdivisionsEnabled === true;
     let selected = null;
     let hovered = null;
     let draggedIndex = null;
@@ -1190,6 +1193,12 @@
       try {
         localStorage.setItem(presetStorageKey(activePreset), JSON.stringify(products.map((product, index) => ({ ...product, visible: visible[index] !== false }))));
         localStorage.setItem(presetKey, activePreset);
+      } catch (_) {}
+    }
+
+    function saveCurveSettings() {
+      try {
+        localStorage.setItem(curveSettingsKey, JSON.stringify({ freshnessDays, terminalDays, curvature, subdivisions, subdivisionsEnabled }));
       } catch (_) {}
     }
 
@@ -1653,12 +1662,14 @@
       terminalDays = Number(event.currentTarget.value);
       terminalDaysValueDisplay.textContent = String(terminalDays);
       positionSliderValue(terminalDaysSlider, terminalDaysValueDisplay);
+      saveCurveSettings();
       drawChart();
     });
     freshnessDaysSlider.addEventListener('input', event => {
       freshnessDays = Number(event.currentTarget.value);
       freshnessDaysValueDisplay.textContent = String(freshnessDays);
       positionSliderValue(freshnessDaysSlider, freshnessDaysValueDisplay);
+      saveCurveSettings();
       drawChart();
     });
     const curvatureSlider = document.querySelector('#curvature');
@@ -1676,6 +1687,7 @@
       curvature = Number(event.currentTarget.value);
       curvatureValueDisplay.textContent = curvature.toFixed(1).replace('.', ',');
       positionCurvatureValue();
+      saveCurveSettings();
       drawChart();
     });
     const subdivisionsSlider = document.querySelector('#subdivisions');
@@ -1693,11 +1705,13 @@
       subdivisions = Number(event.currentTarget.value);
       subdivisionsValueDisplay.textContent = String(subdivisions);
       positionSubdivisionsValue();
+      saveCurveSettings();
       drawChart();
     });
     document.querySelector('#subdivisions-enabled').addEventListener('click', event => {
       subdivisionsEnabled = !subdivisionsEnabled;
       event.currentTarget.setAttribute('aria-pressed', String(subdivisionsEnabled));
+      saveCurveSettings();
       drawChart();
     });
     window.addEventListener('resize', () => {
