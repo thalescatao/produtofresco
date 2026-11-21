@@ -1082,7 +1082,7 @@
           </div>
           <div class="curve-control curvature-control">
             <label for="curvature">Fator de curvatura</label>
-            <div class="curvature-line"><input id="curvature" type="range" min="1" max="2.5" step="0.1" value="1.5"
+            <div class="curvature-line"><input id="curvature" type="range" min="1" max="2" step="0.1" value="1.5"
                 aria-label="Fator de curvatura da queda de preço"><span class="curvature-value"
                 id="curvature-value">1,5</span></div>
           </div>
@@ -1210,7 +1210,7 @@
     let rangeProductSignature = null;
     let freshnessPct = Number.isInteger(savedCurveSettings.freshnessPct) && savedCurveSettings.freshnessPct >= 20 && savedCurveSettings.freshnessPct <= 50 ? savedCurveSettings.freshnessPct : 25;
     let terminalPct = Number.isInteger(savedCurveSettings.terminalPct) && savedCurveSettings.terminalPct >= 20 && savedCurveSettings.terminalPct <= 33 ? savedCurveSettings.terminalPct : 30;
-    let curvature = Number.isFinite(savedCurveSettings.curvature) && savedCurveSettings.curvature >= 1 && savedCurveSettings.curvature <= 2.5 ? savedCurveSettings.curvature : 1.5;
+    let curvature = Number.isFinite(savedCurveSettings.curvature) && savedCurveSettings.curvature >= 1 && savedCurveSettings.curvature <= 2 ? savedCurveSettings.curvature : 1.5;
     let subdivisions = Number.isInteger(savedCurveSettings.subdivisions) && savedCurveSettings.subdivisions >= 2 && savedCurveSettings.subdivisions <= 5 ? savedCurveSettings.subdivisions : 3;
     let subdivisionsEnabled = savedCurveSettings.subdivisionsEnabled === true;
     let selected = null;
