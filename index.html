@@ -1564,8 +1564,9 @@
         : Number.isFinite(params.terminalDays)
           ? (params.terminalDays / Math.max(1, product.shelf)) * 100
           : terminalPct;
-      const freshnessDay = product.shelf * (fPct / 100);
-      const targetDay = Math.max(0, product.shelf * (1 - tPct / 100));
+      const freshnessDay = Math.round(product.shelf * (fPct / 100));
+      const terminalDaysCount = Math.round(product.shelf * (tPct / 100));
+      const targetDay = Math.max(0, product.shelf - terminalDaysCount);
       return { freshnessDay, targetDay };
     }
 
