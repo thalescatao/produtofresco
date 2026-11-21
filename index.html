@@ -14,14 +14,21 @@
       color-scheme: light dark;
       --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
-      --ink: #222222;
-      --muted: #6e6e6e;
-      --line: #e4e4e4;
-      --paper: #ffffff;
-      --canvas: #f5f5f4;
-      --neutral-soft: #ededeb;
-      --chart-grid: #ececea;
-      --chart-muted: #787878;
+      --ink: #201e1c;
+      --muted: #65605b;
+      --line: #d4cec7;
+      --paper: #f9f8f6;
+      --canvas: #eae6e0;
+      --neutral-soft: #e2ddd6;
+      --chart-grid: #d8d2ca;
+      --chart-grid-minor-opacity: 0.38;
+      --chart-grid-mid-opacity: 0.65;
+      --chart-muted: #6d6862;
+      --slider-track: #99938c;
+      --slider-thumb: #3f3b37;
+      --slider-thumb-hover: #24211e;
+      --slider-ring: #f9f8f6;
+      --scrollbar-thumb: #bbb5ad;
       --shadow: 0 12px 36px rgb(0 0 0 / 5%);
       --radius-panel: 18px;
       --radius-card: 12px;
@@ -30,14 +37,21 @@
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --ink: #f0f0f0;
-        --muted: #a3a3a3;
-        --line: #383838;
-        --paper: #222222;
-        --canvas: #161616;
-        --neutral-soft: #333333;
-        --chart-grid: #343434;
-        --chart-muted: #9e9e9e;
+        --ink: #edeae6;
+        --muted: #a09b95;
+        --line: #36332f;
+        --paper: #211f1d;
+        --canvas: #171615;
+        --neutral-soft: #2e2b28;
+        --chart-grid: #302d2a;
+        --chart-grid-minor-opacity: 0.32;
+        --chart-grid-mid-opacity: 0.62;
+        --chart-muted: #98938d;
+        --slider-track: #6e6964;
+        --slider-thumb: #cbc6c0;
+        --slider-thumb-hover: #e4dfd9;
+        --slider-ring: #171615;
+        --scrollbar-thumb: #4d4944;
         --shadow: 0 16px 42px rgb(0 0 0 / 26%);
       }
     }
@@ -194,11 +208,77 @@
     }
 
     .curvature-line input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
       width: 100%;
       height: 18px;
       margin: 0;
-      accent-color: #6b6b6b;
+      background: transparent;
       cursor: pointer;
+    }
+
+    .curvature-line input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--slider-track);
+    }
+
+    .curvature-line input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--slider-track);
+    }
+
+    #freshness-days::-webkit-slider-runnable-track {
+      background: linear-gradient(90deg, #4fae6c 0%, #e5be48 52%, #dc5d55 100%);
+    }
+
+    #freshness-days::-moz-range-track {
+      background: linear-gradient(90deg, #4fae6c 0%, #e5be48 52%, #dc5d55 100%);
+    }
+
+    #terminal-days::-webkit-slider-runnable-track {
+      background: linear-gradient(90deg, #dc5d55 0%, #e5be48 48%, #4fae6c 100%);
+    }
+
+    #terminal-days::-moz-range-track {
+      background: linear-gradient(90deg, #dc5d55 0%, #e5be48 48%, #4fae6c 100%);
+    }
+
+    .curvature-line input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      margin-top: -5px;
+      border-radius: 50%;
+      background: var(--slider-thumb);
+      border: 2px solid var(--slider-ring);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .28);
+      transition: transform .12s, background-color .15s;
+    }
+
+    .curvature-line input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--slider-thumb);
+      border: 2px solid var(--slider-ring);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .28);
+      box-sizing: border-box;
+      transition: transform .12s, background-color .15s;
+    }
+
+    .curvature-line input[type="range"]:hover::-webkit-slider-thumb,
+    .curvature-line input[type="range"]:focus-visible::-webkit-slider-thumb {
+      background: var(--slider-thumb-hover);
+      transform: scale(1.06);
+    }
+
+    .curvature-line input[type="range"]:hover::-moz-range-thumb,
+    .curvature-line input[type="range"]:focus-visible::-moz-range-thumb {
+      background: var(--slider-thumb-hover);
+      transform: scale(1.06);
     }
 
     .curvature-value {
@@ -356,7 +436,7 @@
       gap: 9px;
       overflow-y: auto;
       padding-right: 6px;
-      scrollbar-color: #b5b5b5 transparent;
+      scrollbar-color: var(--scrollbar-thumb) transparent;
       scrollbar-width: thin;
     }
 
@@ -994,11 +1074,11 @@
         <div class="curve-controls">
           <div class="curve-control">
             <label for="freshness-days">Período de frescor</label>
-            <div class="curvature-line"><input id="freshness-days" type="range" min="20" max="50" step="1" value="20" aria-label="Percentual da validade em que o preço permanece no máximo após a produção"><span class="curvature-value" id="freshness-days-value">20%</span></div>
+            <div class="curvature-line"><input id="freshness-days" type="range" min="20" max="50" step="1" value="25" aria-label="Percentual da validade em que o preço permanece no máximo após a produção"><span class="curvature-value" id="freshness-days-value">25%</span></div>
           </div>
           <div class="curve-control">
             <label for="terminal-days"><span class="terminal-label-desktop">Prazo final de venda</span><span class="terminal-label-mobile">Prazo final</span></label>
-            <div class="curvature-line"><input id="terminal-days" type="range" min="20" max="33" step="1" value="25" aria-label="Percentual final da validade em que o preço permanece no mínimo"><span class="curvature-value" id="terminal-days-value">25%</span></div>
+            <div class="curvature-line"><input id="terminal-days" type="range" min="20" max="33" step="1" value="30" aria-label="Percentual final da validade em que o preço permanece no mínimo"><span class="curvature-value" id="terminal-days-value">30%</span></div>
           </div>
           <div class="curve-control curvature-control">
             <label for="curvature">Fator de curvatura</label>
@@ -1128,8 +1208,8 @@
     const tooltip = document.querySelector('#tooltip');
     let maxDays = 30;
     let rangeProductSignature = null;
-    let freshnessPct = Number.isInteger(savedCurveSettings.freshnessPct) && savedCurveSettings.freshnessPct >= 20 && savedCurveSettings.freshnessPct <= 50 ? savedCurveSettings.freshnessPct : 20;
-    let terminalPct = Number.isInteger(savedCurveSettings.terminalPct) && savedCurveSettings.terminalPct >= 20 && savedCurveSettings.terminalPct <= 33 ? savedCurveSettings.terminalPct : 25;
+    let freshnessPct = Number.isInteger(savedCurveSettings.freshnessPct) && savedCurveSettings.freshnessPct >= 20 && savedCurveSettings.freshnessPct <= 50 ? savedCurveSettings.freshnessPct : 25;
+    let terminalPct = Number.isInteger(savedCurveSettings.terminalPct) && savedCurveSettings.terminalPct >= 20 && savedCurveSettings.terminalPct <= 33 ? savedCurveSettings.terminalPct : 30;
     let curvature = Number.isFinite(savedCurveSettings.curvature) && savedCurveSettings.curvature >= 1 && savedCurveSettings.curvature <= 2.5 ? savedCurveSettings.curvature : 1.5;
     let subdivisions = Number.isInteger(savedCurveSettings.subdivisions) && savedCurveSettings.subdivisions >= 2 && savedCurveSettings.subdivisions <= 5 ? savedCurveSettings.subdivisions : 3;
     let subdivisionsEnabled = savedCurveSettings.subdivisionsEnabled === true;
@@ -1610,7 +1690,7 @@
         if (value % 10 === 0) continue;
         const isFive = value % 5 === 0;
         const yy = y(value);
-        markup += `<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="var(--chart-grid)" stroke-width="${isFive ? 0.8 : 0.55}" opacity="${isFive ? 0.62 : 0.32}"/>`;
+        markup += `<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="var(--chart-grid)" stroke-width="${isFive ? 0.8 : 0.55}" style="opacity:var(${isFive ? '--chart-grid-mid-opacity' : '--chart-grid-minor-opacity'})"/>`;
       }
 
       for (let value = minValue; value <= maxValue; value += 10) {
@@ -1643,10 +1723,24 @@
           const lastEnd = segments[segments.length - 1].end;
           if (lastEnd < endDay) path += `L${x(lastEnd).toFixed(2)},${y(product.min).toFixed(2)} L${x(endDay).toFixed(2)},${y(product.min).toFixed(2)} `;
         } else {
-          const samples = Math.max(2, Math.ceil(endDay * 2));
-          for (let point = 0; point <= samples; point++) {
-            const day = endDay * point / samples;
-            path += `${point === 0 ? 'M' : 'L'}${x(day).toFixed(2)},${y(priceAt(product, day)).toFixed(2)} `;
+          const params = product.curveParams || { freshnessPct, terminalPct, curvature };
+          const { freshnessDay, targetDay } = resolveCurveDays(product, params);
+          const curveStart = targetDay > freshnessDay ? freshnessDay : 0;
+          const clampedStart = Math.min(endDay, Math.max(0, curveStart));
+          const clampedEnd = Math.min(endDay, Math.max(clampedStart, targetDay));
+          path = `M${x(0).toFixed(2)},${y(priceAt(product, 0)).toFixed(2)} `;
+          if (clampedStart > 0) {
+            path += `L${x(clampedStart).toFixed(2)},${y(product.max).toFixed(2)} `;
+          }
+          if (clampedEnd > clampedStart) {
+            const curveSamples = 48;
+            for (let point = 1; point <= curveSamples; point++) {
+              const day = clampedStart + (clampedEnd - clampedStart) * (point / curveSamples);
+              path += `L${x(day).toFixed(2)},${y(priceAt(product, day)).toFixed(2)} `;
+            }
+          }
+          if (clampedEnd < endDay) {
+            path += `L${x(endDay).toFixed(2)},${y(product.min).toFixed(2)} `;
           }
         }
         markup += `<path data-product="${index}" d="${path}" fill="none" stroke="${product.color}" stroke-width="${hasFocus ? (emphasized ? 3.8 : 2.1) : 2.2}" stroke-linecap="round" stroke-linejoin="round" opacity="${hasFocus ? (emphasized ? 1 : .22) : .77}"/>`;
