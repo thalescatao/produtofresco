@@ -627,6 +627,14 @@
       outline: 2px solid var(--product-color);
     }
 
+    .product-tools {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .card-tool,
     .freeze-params {
       display: flex;
       width: 30px;
@@ -639,25 +647,76 @@
       border-radius: 8px;
       background: transparent;
       color: var(--product-color);
-      opacity: .42;
+      opacity: .44;
       cursor: pointer;
       transition: opacity .15s, background .15s;
     }
 
+    .card-tool:hover,
+    .card-tool[aria-expanded="true"],
     .freeze-params:hover,
     .freeze-params[aria-pressed="true"] {
       opacity: 1;
       background: color-mix(in srgb, var(--product-color), transparent 88%);
     }
 
+    .card-tool svg,
     .freeze-params svg {
-      width: 19px;
-      height: 19px;
+      display: block;
+      width: 18px;
+      height: 18px;
       fill: none;
       stroke: currentColor;
       stroke-width: 1.7;
       stroke-linecap: round;
       stroke-linejoin: round;
+    }
+
+    .freeze-params svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .color-popover {
+      position: fixed;
+      z-index: 60;
+      display: none;
+      grid-template-columns: repeat(8, 22px);
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .color-popover.is-open {
+      display: grid;
+    }
+
+    .color-swatch {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgb(0 0 0 / 14%);
+      cursor: pointer;
+      transition: transform .12s, box-shadow .12s;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .color-swatch {
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 18%);
+      }
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.14);
+    }
+
+    .color-swatch[aria-checked="true"] {
+      box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.8px var(--ink);
     }
 
     .fields {
@@ -1027,6 +1086,7 @@
         grid-template-rows: repeat(3, 28px);
       }
 
+      .card-tool,
       .freeze-params {
         width: 28px;
         height: 28px;
@@ -1160,22 +1220,41 @@
       </section>
     </div>
   </main>
+  <div class="color-popover" id="color-popover" role="radiogroup" aria-label="Escolher cor do item"></div>
   <script>
     const defaults = [
-      { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#d45d5d' },
-      { name: 'Ovos vermelhos', unit: 'bandeja · 30 unidades', max: 24.90, min: 14.90, shelf: 30, color: '#e3913e' },
-      { name: 'Ovos caipiras', unit: 'bandeja · 20 unidades', max: 29.90, min: 16.90, shelf: 30, color: '#d5b441' },
-      { name: 'Leite fresco', unit: 'garrafa · 1 litro', max: 9.90, min: 4.90, shelf: 30, color: '#55a86b' },
-      { name: 'Creme de leite fresco', unit: 'garrafa · 500 ml', max: 29.00, min: 15.90, shelf: 30, color: '#3c9da6' },
-      { name: 'Carne bovina resfriada', unit: 'bandeja · 1 kg', max: 39.90, min: 29.90, shelf: 30, color: '#527ec0' },
-      { name: 'Carne suína resfriada', unit: 'bandeja · 1 kg', max: 24.90, min: 18.90, shelf: 30, color: '#8d65b4' }
+      { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#dc4c4c' },
+      { name: 'Ovos vermelhos', unit: 'bandeja · 30 unidades', max: 24.90, min: 14.90, shelf: 30, color: '#e88c30' },
+      { name: 'Ovos caipiras', unit: 'bandeja · 20 unidades', max: 29.90, min: 16.90, shelf: 30, color: '#d9b532' },
+      { name: 'Leite fresco', unit: 'garrafa · 1 litro', max: 9.90, min: 4.90, shelf: 30, color: '#39b35b' },
+      { name: 'Creme de leite fresco', unit: 'garrafa · 500 ml', max: 29.00, min: 15.90, shelf: 30, color: '#1d838e' },
+      { name: 'Carne bovina resfriada', unit: 'bandeja · 1 kg', max: 39.90, min: 29.90, shelf: 30, color: '#325aa8' },
+      { name: 'Carne suína resfriada', unit: 'bandeja · 1 kg', max: 24.90, min: 18.90, shelf: 30, color: '#733eb5' }
     ];
     const storageKey = 'produto-fresco-itens-v1';
     const presetKey = 'produto-fresco-preset-v1';
     const curveSettingsKey = 'produto-fresco-curva-v1';
     let savedCurveSettings = {};
     try { savedCurveSettings = JSON.parse(localStorage.getItem(curveSettingsKey) || '{}') || {}; } catch (_) {}
-    const palette = defaults.map(item => item.color);
+    const colorSwatches = [
+      { hex: '#e388a2', label: 'Rosa' },
+      { hex: '#e88c30', label: 'Laranja' },
+      { hex: '#d9b532', label: 'Amarelo' },
+      { hex: '#39b35b', label: 'Verde' },
+      { hex: '#6daae8', label: 'Azul celeste' },
+      { hex: '#cf478c', label: 'Magenta' },
+      { hex: '#cac4bc', label: 'Cinza claro' },
+      { hex: '#a09a92', label: 'Cinza médio claro' },
+      { hex: '#dc4c4c', label: 'Vermelho' },
+      { hex: '#8f4f2c', label: 'Terracota' },
+      { hex: '#869936', label: 'Verde-oliva' },
+      { hex: '#1d838e', label: 'Ciano' },
+      { hex: '#325aa8', label: 'Azul cobalto' },
+      { hex: '#733eb5', label: 'Roxo' },
+      { hex: '#736e68', label: 'Cinza médio' },
+      { hex: '#474440', label: 'Grafite' }
+    ];
+    const palette = colorSwatches.map(item => item.hex);
     const presetProducts = {
       geral: defaults,
       ovos: defaults.slice(0, 3),
@@ -1239,6 +1318,64 @@
     const chart = document.querySelector('#chart');
     const wrap = document.querySelector('#chart-wrap');
     const tooltip = document.querySelector('#tooltip');
+    const colorPopover = document.querySelector('#color-popover');
+    let colorPopoverIndex = null;
+    let colorPopoverTrigger = null;
+
+    function closeColorPopover() {
+      if (colorPopoverTrigger) colorPopoverTrigger.setAttribute('aria-expanded', 'false');
+      colorPopover.classList.remove('is-open');
+      colorPopoverIndex = null;
+      colorPopoverTrigger = null;
+    }
+
+    function openColorPopover(index, trigger) {
+      closeColorPopover();
+      const product = products[index];
+      if (!product) return;
+      colorPopoverIndex = index;
+      colorPopoverTrigger = trigger;
+      trigger.setAttribute('aria-expanded', 'true');
+      colorPopover.innerHTML = colorSwatches.map(swatch => {
+        const active = swatch.hex.toLowerCase() === product.color.toLowerCase();
+        return `<button class="color-swatch" type="button" role="radio" aria-checked="${active}" aria-label="${swatch.label}" title="${swatch.label}" data-color="${swatch.hex}" style="background:${swatch.hex}"></button>`;
+      }).join('');
+      colorPopover.querySelectorAll('.color-swatch').forEach(btn => {
+        btn.addEventListener('click', event => {
+          event.stopPropagation();
+          const chosen = btn.dataset.color;
+          if (products[index] && products[index].color !== chosen) {
+            rememberProducts();
+            products[index].color = chosen;
+            saveProducts();
+            renderProducts();
+            renderLegend();
+            drawChart();
+          }
+          closeColorPopover();
+        });
+      });
+      colorPopover.classList.add('is-open');
+      const rect = trigger.getBoundingClientRect();
+      const popW = colorPopover.offsetWidth || 252;
+      const popH = colorPopover.offsetHeight || 72;
+      const left = Math.min(Math.max(8, rect.left + rect.width / 2 - popW / 2), window.innerWidth - popW - 8);
+      const top = rect.bottom + 8 + popH <= window.innerHeight - 8 ? rect.bottom + 8 : Math.max(8, rect.top - popH - 8);
+      colorPopover.style.left = `${left}px`;
+      colorPopover.style.top = `${top}px`;
+    }
+
+    document.addEventListener('click', event => {
+      if (colorPopover.classList.contains('is-open') && !event.target.closest('#color-popover, [data-action="color"]')) {
+        closeColorPopover();
+      }
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && colorPopover.classList.contains('is-open')) closeColorPopover();
+    });
+    list.addEventListener('scroll', () => {
+      if (colorPopover.classList.contains('is-open')) closeColorPopover();
+    }, { passive: true });
     let maxDays = 30;
     let rangeProductSignature = null;
     let freshnessPct = Number.isInteger(savedCurveSettings.freshnessPct) && savedCurveSettings.freshnessPct >= 20 && savedCurveSettings.freshnessPct <= 50 ? savedCurveSettings.freshnessPct : 25;
@@ -1340,7 +1477,7 @@
             <button class="item-action" type="button" data-action="visibility"><svg viewBox="0 0 20 20" aria-hidden="true"></svg></button>
             <button class="item-action" type="button" data-action="delete" title="Excluir"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5.5h13M7 5.5V3.5h6v2m2.2 0-.8 11H5.6l-.8-11M8.2 8.5v5.2m3.6-5.2v5.2"/></svg></button>
           </div>
-          <div class="product-top"><span class="product-title"><span class="product-name"></span><span class="product-unit"></span><button class="freeze-params" type="button" data-action="freeze-params" aria-pressed="false" aria-label="Congelar parâmetros deste item" title="Congelar parâmetros deste item"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v16M3.1 6l13.8 8M3.1 14l13.8-8M7.5 3.5 10 5l2.5-1.5M7.5 16.5 10 15l2.5 1.5M2.8 8.5 5.5 8 6 5.5M14 14.5l.5-2.5 2.7-.5M2.8 11.5l2.7.5.5 2.5M14 5.5l.5 2.5 2.7.5"/></svg></button></span></div>
+          <div class="product-top"><span class="product-title"><span class="product-name"></span><span class="product-unit"></span><span class="product-tools"><button class="card-tool" type="button" data-action="duplicate" aria-label="Duplicar item" title="Duplicar item"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="6.5" width="9" height="10.5" rx="1.8"/><path d="M13 6.5V4.8A1.8 1.8 0 0 0 11.2 3H5.8A1.8 1.8 0 0 0 4 4.8v7.4A1.8 1.8 0 0 0 5.8 14H7"/></svg></button><button class="card-tool" type="button" data-action="color" aria-haspopup="true" aria-expanded="false" aria-label="Alterar cor deste item" title="Alterar cor"><svg viewBox="0 0 24 24" style="stroke-width:1.9" aria-hidden="true"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.3c2.6 0 4.7-2.1 4.7-4.7C22 5.9 17.5 2 12 2Z"/><circle cx="7.5" cy="10.5" r="1.25" fill="currentColor" stroke="none"/><circle cx="11" cy="7" r="1.25" fill="currentColor" stroke="none"/><circle cx="15.5" cy="8.5" r="1.25" fill="currentColor" stroke="none"/><circle cx="8" cy="15" r="1.25" fill="currentColor" stroke="none"/></svg></button><button class="freeze-params" type="button" data-action="freeze-params" aria-pressed="false" aria-label="Congelar parâmetros deste item" title="Congelar parâmetros deste item"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v16M3.1 6l13.8 8M3.1 14l13.8-8M7.5 3.5 10 5l2.5-1.5M7.5 16.5 10 15l2.5 1.5M2.8 8.5 5.5 8 6 5.5M14 14.5l.5-2.5 2.7-.5M2.8 11.5l2.7.5.5 2.5M14 5.5l.5 2.5 2.7.5"/></svg></button></span></span></div>
           <div class="fields">
             <div class="field"><div class="input-wrap"><span class="prefix">R$</span><input data-key="max" type="number" min="0" step="0.50"><span class="suffix">máx</span></div></div>
             <div class="field"><div class="input-wrap"><span class="prefix">R$</span><input data-key="min" type="number" min="0" step="0.50"><span class="suffix">mín</span></div></div>
@@ -1354,16 +1491,48 @@
         card.style.setProperty('--product-color', product.color);
         card.querySelector('.product-name').textContent = product.name;
         card.querySelector('.product-unit').textContent = product.unit;
+        const duplicateButton = card.querySelector('[data-action="duplicate"]');
+        duplicateButton.setAttribute('aria-label', 'Duplicar ' + product.name);
+        duplicateButton.addEventListener('click', event => {
+          event.stopPropagation();
+          closeColorPopover();
+          rememberProducts();
+          const copy = {
+            ...product,
+            name: product.name + ' (cópia)',
+            color: product.color,
+            curveParams: product.curveParams ? { ...product.curveParams } : null
+          };
+          products.splice(index + 1, 0, copy);
+          visible.splice(index + 1, 0, true);
+          selected = index + 1;
+          hovered = null;
+          saveProducts();
+          renderProducts();
+          renderLegend();
+          drawChart();
+        });
         const freezeButton = card.querySelector('[data-action="freeze-params"]');
         freezeButton.setAttribute('aria-pressed', String(Boolean(product.curveParams)));
         freezeButton.setAttribute('aria-label', product.curveParams ? 'Descongelar parâmetros deste item' : 'Congelar parâmetros deste item');
         freezeButton.title = product.curveParams ? 'Parâmetros congelados neste item' : 'Congelar parâmetros deste item';
         freezeButton.addEventListener('click', event => {
           event.stopPropagation();
+          closeColorPopover();
           product.curveParams = product.curveParams ? null : { freshnessPct, terminalPct, curvature, subdivisions, subdivisionsEnabled };
           saveProducts();
           renderProducts();
           drawChart();
+        });
+        const colorButton = card.querySelector('[data-action="color"]');
+        colorButton.setAttribute('aria-label', 'Alterar cor de ' + product.name);
+        colorButton.addEventListener('click', event => {
+          event.stopPropagation();
+          if (colorPopoverIndex === index && colorPopover.classList.contains('is-open')) {
+            closeColorPopover();
+          } else {
+            openColorPopover(index, colorButton);
+          }
         });
         card.querySelector('[data-action="rename"]').setAttribute('aria-label', 'Renomear ' + product.name);
         card.querySelector('[data-action="delete"]').setAttribute('aria-label', 'Excluir ' + product.name);
@@ -1578,7 +1747,7 @@
     });
 
     document.addEventListener('click', event => {
-      if (event.target.closest('.product-card, [data-product], #add-product')) return;
+      if (event.target.closest('.product-card, [data-product], #add-product, #color-popover')) return;
       if (selected !== null || hovered !== null) {
         selected = null;
         hovered = null;
@@ -1861,7 +2030,7 @@
     });
     wrap.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; if (hovered !== null) { hovered = null; drawChart(); } else updateProductPanel(); });
     document.addEventListener('click', event => {
-      if (event.target.closest('.product-card, [data-product]')) return;
+      if (event.target.closest('.product-card, [data-product], #color-popover')) return;
       if (selected !== null || hovered !== null) {
         selected = null;
         hovered = null;
