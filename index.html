@@ -1505,15 +1505,20 @@
       colorPopover.style.top = `${top}px`;
     }
 
-    document.addEventListener('click', event => {
+    function handleOutsideColorPopover(event) {
       if (colorPopover.classList.contains('is-open') && !event.target.closest('#color-popover, [data-action="color"]')) {
         closeColorPopover();
       }
-    });
+    }
+    document.addEventListener('pointerdown', handleOutsideColorPopover, { capture: true, passive: true });
+    document.addEventListener('click', handleOutsideColorPopover);
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && colorPopover.classList.contains('is-open')) closeColorPopover();
     });
-    list.addEventListener('scroll', () => {
+    window.addEventListener('scroll', () => {
+      if (colorPopover.classList.contains('is-open')) closeColorPopover();
+    }, { capture: true, passive: true });
+    window.addEventListener('resize', () => {
       if (colorPopover.classList.contains('is-open')) closeColorPopover();
     }, { passive: true });
     let maxDays = 30;
