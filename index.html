@@ -821,6 +821,67 @@
       display: grid;
     }
 
+    .list-menu-popover {
+      position: fixed;
+      z-index: 41;
+      display: none;
+      flex-direction: column;
+      min-width: 210px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: 0 12px 28px rgba(32, 30, 28, 0.16);
+    }
+
+    .list-menu-popover.is-open {
+      display: flex;
+    }
+
+    .list-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+    }
+
+    .list-menu-item:hover {
+      background: var(--canvas);
+    }
+
+    .list-menu-item.is-danger {
+      color: #c84b3e;
+    }
+
+    .list-menu-item svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.78;
+    }
+
+    .list-menu-sep {
+      height: 1px;
+      margin: 5px 4px;
+      background: var(--line);
+    }
+
     .color-swatch {
       width: 22px;
       height: 22px;
@@ -1342,7 +1403,7 @@
           </div>
           <span class="count">6 itens</span>
         </div>
-        <div class="product-toolbar"><button id="reset-storage" type="button" class="reset-storage" aria-label="Limpar dados salvos" title="Limpar dados salvos"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10a7 7 0 1 0 2.05-4.95L3 7"/><path d="M3 3v4h4"/></svg></button><select id="preset-select" class="preset-select" aria-label="Preset"><option value="geral">Geral</option><option value="ovos">Ovos</option><option value="laticinios">Laticínios</option><option value="carne">Carnes</option></select><button id="add-product" type="button" class="add-product">Adicionar Item</button></div>
+        <div class="product-toolbar"><button id="list-menu-btn" type="button" class="reset-storage" aria-label="Gerenciar listas" aria-haspopup="menu" aria-expanded="false" title="Gerenciar listas"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4.5" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="1.4" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10" r="1.4" fill="currentColor" stroke="none"/></svg></button><select id="preset-select" class="preset-select" aria-label="Lista ativa"></select><button id="add-product" type="button" class="add-product">Adicionar Item</button><input id="import-lists-input" type="file" accept=".json,application/json" hidden></div>
         <div id="product-list" class="product-list"></div>
       </aside>
       <section class="panel chart-panel" aria-labelledby="chart-title">
@@ -1361,6 +1422,7 @@
     </div>
   </main>
   <div class="color-popover" id="color-popover" role="radiogroup" aria-label="Escolher cor do item"></div>
+  <div class="list-menu-popover" id="list-menu-popover" role="menu" aria-label="Opções da lista"></div>
   <script>
     const defaults = [
       { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#dc4c4c' },
@@ -1395,24 +1457,77 @@
       { hex: '#474440', label: 'Grafite' }
     ];
     const palette = colorSwatches.map(item => item.hex);
+    function snapToSwatch(hex) {
+      if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return null;
+      const lower = hex.toLowerCase();
+      if (palette.includes(lower)) return lower;
+      const toRgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+      const [r1, g1, b1] = toRgb(lower);
+      let best = palette[0], bestDist = Infinity;
+      for (const candidate of palette) {
+        const [r2, g2, b2] = toRgb(candidate);
+        const dist = (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
+        if (dist < bestDist) { bestDist = dist; best = candidate; }
+      }
+      return best;
+    }
     const presetProducts = {
       geral: defaults,
       ovos: defaults.slice(0, 3),
       laticinios: [
         defaults[3], defaults[4],
-        { name: 'Manteiga', unit: 'pote · 500 ml', max: 24.90, min: 15.90, shelf: 60, color: '#d5b441' },
-        { name: 'Requeijão cremoso', unit: 'pote · 200 g', max: 12.90, min: 7.90, shelf: 45, color: '#c45f91' },
-        { name: 'Iogurte natural integral', unit: 'pote · 500 g', max: 14.90, min: 8.90, shelf: 30, color: '#8d65b4' }
+        { name: 'Manteiga', unit: 'pote · 500 ml', max: 24.90, min: 15.90, shelf: 60, color: '#d9b532' },
+        { name: 'Requeijão cremoso', unit: 'pote · 200 g', max: 12.90, min: 7.90, shelf: 45, color: '#cf478c' },
+        { name: 'Iogurte natural integral', unit: 'pote · 500 g', max: 14.90, min: 8.90, shelf: 30, color: '#733eb5' }
       ],
       carne: [
-        { name: 'Acém resfriado', unit: 'bandeja · 1 kg', max: 34.90, min: 25.90, shelf: 30, color: '#3c9da6' },
-        { name: 'Alcatra resfriada', unit: 'bandeja · 1 kg', max: 54.90, min: 42.90, shelf: 30, color: '#e3913e' },
-        { name: 'Contrafilé resfriado', unit: 'bandeja · 1 kg', max: 59.90, min: 46.90, shelf: 30, color: '#d5b441' },
-        { name: 'Patinho resfriado', unit: 'bandeja · 1 kg', max: 49.90, min: 37.90, shelf: 30, color: '#55a86b' },
-        { name: 'Coxão mole resfriado', unit: 'bandeja · 1 kg', max: 46.90, min: 35.90, shelf: 30, color: '#765bb8' }
+        { name: 'Acém resfriado', unit: 'bandeja · 1 kg', max: 34.90, min: 25.90, shelf: 30, color: '#1d838e' },
+        { name: 'Alcatra resfriada', unit: 'bandeja · 1 kg', max: 54.90, min: 42.90, shelf: 30, color: '#e88c30' },
+        { name: 'Contrafilé resfriado', unit: 'bandeja · 1 kg', max: 59.90, min: 46.90, shelf: 30, color: '#d9b532' },
+        { name: 'Patinho resfriado', unit: 'bandeja · 1 kg', max: 49.90, min: 37.90, shelf: 30, color: '#39b35b' },
+        { name: 'Coxão mole resfriado', unit: 'bandeja · 1 kg', max: 46.90, min: 35.90, shelf: 30, color: '#733eb5' }
       ]
     };
+    const builtInPresetLabels = { geral: 'Geral', ovos: 'Ovos', laticinios: 'Laticínios', carne: 'Carnes' };
+    const listsMetaKey = 'produto-fresco-lists-v1';
+    const customListsKey = 'produto-fresco-custom-lists-v1';
     const namedColors = Object.fromEntries(Object.values(presetProducts).flat().map(product => [product.name, product.color]));
+    function isBuiltInPreset(id) { return Object.prototype.hasOwnProperty.call(presetProducts, id); }
+    function defaultListsMeta() {
+      return Object.keys(presetProducts).map(id => ({ id, name: builtInPresetLabels[id] }));
+    }
+    function loadListsMeta() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(listsMetaKey) || 'null');
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const valid = parsed.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string' && item.name.trim());
+          if (valid.length > 0) return valid;
+        }
+      } catch (_) {}
+      const base = defaultListsMeta();
+      try {
+        const legacyCustom = JSON.parse(localStorage.getItem(customListsKey) || '[]');
+        if (Array.isArray(legacyCustom)) {
+          legacyCustom.forEach(item => {
+            if (item && typeof item.id === 'string' && typeof item.name === 'string' && !base.some(b => b.id === item.id)) {
+              base.push({ id: item.id, name: item.name });
+            }
+          });
+        }
+      } catch (_) {}
+      return base;
+    }
+    let listsMeta = loadListsMeta();
+    function saveListsMeta() {
+      try { localStorage.setItem(listsMetaKey, JSON.stringify(listsMeta)); } catch (_) {}
+    }
+    function listExists(id) {
+      return listsMeta.some(item => item.id === id);
+    }
+    function getListName(id) {
+      const found = listsMeta.find(item => item.id === id);
+      return found ? found.name : (builtInPresetLabels[id] || 'Lista');
+    }
     function presetStorageKey(preset) { return preset === 'geral' ? storageKey : storageKey + '-' + preset; }
     function loadProducts(key, base) {
       try {
@@ -1421,7 +1536,7 @@
           const loaded = saved.map((item, index) => ({
             name: item.name, unit: item.unit,
             max: Number(item.max), min: Number(item.min), shelf: Math.max(1, Number(item.shelf)),
-            color: namedColors[item.name] || (/^#[0-9a-f]{6}$/i.test(item.color || '') ? item.color : palette[index % palette.length]),
+            color: snapToSwatch(item.color) || namedColors[item.name] || palette[index % palette.length],
             curveParams: item.curveParams && typeof item.curveParams === 'object' ? item.curveParams : null,
             visible: item.visible !== false
           }));
@@ -1440,18 +1555,17 @@
                 product.shelf = 30;
                 migrated = true;
               }
-              if (namedColors[product.name]) product.color = namedColors[product.name];
             });
             if (migrated) localStorage.setItem(key, JSON.stringify(loaded));
           }
           return loaded;
         }
       } catch (_) {}
-      return base.map((item, index) => ({ ...item, color: namedColors[item.name] || item.color || palette[index % palette.length], visible: true }));
+      return (base || []).map((item, index) => ({ ...item, color: item.color || namedColors[item.name] || palette[index % palette.length], visible: true }));
     }
-    let activePreset = localStorage.getItem(presetKey) || 'geral';
-    if (!presetProducts[activePreset]) activePreset = 'geral';
-    const products = loadProducts(presetStorageKey(activePreset), presetProducts[activePreset]);
+    let activePreset = localStorage.getItem(presetKey) || (listsMeta[0] ? listsMeta[0].id : 'geral');
+    if (!listExists(activePreset)) activePreset = listsMeta[0] ? listsMeta[0].id : 'geral';
+    const products = loadProducts(presetStorageKey(activePreset), presetProducts[activePreset] || []);
     const visible = products.map(item => item.visible !== false);
     const list = document.querySelector('#product-list');
     const legend = document.querySelector('#chart-legend');
@@ -1576,24 +1690,261 @@
     }
 
     const presetSelect = document.querySelector('#preset-select');
-    presetSelect.value = activePreset;
-    presetSelect.addEventListener('change', () => {
-      activePreset = presetSelect.value;
-      const nextProducts = loadProducts(presetStorageKey(activePreset), presetProducts[activePreset]);
+    const listMenuBtn = document.querySelector('#list-menu-btn');
+    const listMenuPopover = document.querySelector('#list-menu-popover');
+    const importListsInput = document.querySelector('#import-lists-input');
+
+    function renderPresetSelect() {
+      presetSelect.innerHTML = listsMeta
+        .map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`)
+        .join('');
+      presetSelect.value = activePreset;
+    }
+
+    function switchActivePreset(nextId) {
+      if (!listExists(nextId)) nextId = listsMeta[0] ? listsMeta[0].id : 'geral';
+      activePreset = nextId;
+      presetSelect.value = activePreset;
+      const nextProducts = loadProducts(presetStorageKey(activePreset), presetProducts[activePreset] || []);
       products.splice(0, products.length, ...nextProducts);
       visible.splice(0, visible.length, ...nextProducts.map(product => product.visible !== false));
       selected = null;
       hovered = null;
+      closeColorPopover();
       saveProducts();
       renderProducts();
       renderLegend();
       drawChart();
+    }
+
+    function closeListMenu() {
+      listMenuPopover.classList.remove('is-open');
+      listMenuBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function clearAppStorage() {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('produto-fresco-')) keysToRemove.push(key);
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+
+    function exportAllLists() {
+      const listsData = {};
+      listsMeta.forEach(item => {
+        listsData[item.id] = loadProducts(presetStorageKey(item.id), presetProducts[item.id] || []);
+      });
+      const payload = {
+        app: 'produto-fresco',
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        activePreset,
+        listsMeta,
+        curveSettings: { freshnessPct, terminalPct, curvature, subdivisions, subdivisionsEnabled },
+        lists: listsData
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'produto-fresco-listas.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function handleImportFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(String(reader.result || ''));
+          if (!data || typeof data !== 'object' || !data.lists || typeof data.lists !== 'object') {
+            window.alert('Arquivo inválido. Selecione um backup .json exportado pelo Produto Fresco.');
+            return;
+          }
+          if (Array.isArray(data.listsMeta) && data.listsMeta.length > 0) {
+            const validMeta = data.listsMeta.filter(item => item && typeof item.id === 'string' && typeof item.name === 'string' && item.name.trim());
+            if (validMeta.length > 0) {
+              listsMeta = validMeta.map(item => ({ id: item.id, name: item.name.trim() }));
+              saveListsMeta();
+            }
+          } else if (Array.isArray(data.customLists)) {
+            data.customLists.forEach(item => {
+              if (item && typeof item.id === 'string' && typeof item.name === 'string' && !listsMeta.some(m => m.id === item.id)) {
+                listsMeta.push({ id: item.id, name: item.name.trim() });
+              }
+            });
+            saveListsMeta();
+          }
+          Object.entries(data.lists).forEach(([id, items]) => {
+            if (!listExists(id) || !Array.isArray(items)) return;
+            const cleanItems = items
+              .filter(it => it && typeof it.name === 'string' && typeof it.unit === 'string' && Number.isFinite(Number(it.max)) && Number.isFinite(Number(it.min)) && Number.isFinite(Number(it.shelf)))
+              .map((it, idx) => ({
+                name: it.name,
+                unit: it.unit,
+                max: Number(it.max),
+                min: Number(it.min),
+                shelf: Math.max(1, Number(it.shelf)),
+                color: /^#[0-9a-f]{6}$/i.test(it.color || '') ? it.color : palette[idx % palette.length],
+                curveParams: it.curveParams && typeof it.curveParams === 'object' ? it.curveParams : null,
+                visible: it.visible !== false
+              }));
+            localStorage.setItem(presetStorageKey(id), JSON.stringify(cleanItems));
+          });
+          if (data.curveSettings && typeof data.curveSettings === 'object') {
+            const cs = data.curveSettings;
+            if (Number.isInteger(cs.freshnessPct) && cs.freshnessPct >= 20 && cs.freshnessPct <= 50) freshnessPct = cs.freshnessPct;
+            if (Number.isInteger(cs.terminalPct) && cs.terminalPct >= 20 && cs.terminalPct <= 33) terminalPct = cs.terminalPct;
+            if (Number.isFinite(cs.curvature) && cs.curvature >= 1 && cs.curvature <= 2) curvature = cs.curvature;
+            if (Number.isInteger(cs.subdivisions) && cs.subdivisions >= 1 && cs.subdivisions <= 5) subdivisions = cs.subdivisions;
+            if (typeof cs.subdivisionsEnabled === 'boolean') subdivisionsEnabled = cs.subdivisionsEnabled;
+            saveCurveSettings();
+          }
+          renderPresetSelect();
+          switchActivePreset(typeof data.activePreset === 'string' && listExists(data.activePreset) ? data.activePreset : (listsMeta[0] ? listsMeta[0].id : 'geral'));
+          window.location.reload();
+        } catch (_) {
+          window.alert('Não foi possível ler este arquivo JSON.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function openListMenu() {
+      closeColorPopover();
+      const isBuiltIn = isBuiltInPreset(activePreset);
+      const currentName = getListName(activePreset);
+      const canDelete = listsMeta.length > 1;
+      const itemsHtml = [
+        `<button type="button" class="list-menu-item" role="menuitem" data-list-action="new"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>Nova lista</button>`,
+        `<button type="button" class="list-menu-item" role="menuitem" data-list-action="duplicate"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="7" width="9" height="9" rx="1.8"/><path d="M13 7V5.8A1.8 1.8 0 0 0 11.2 4H5.8A1.8 1.8 0 0 0 4 5.8v5.4A1.8 1.8 0 0 0 5.8 13H7"/></svg>Duplicar lista atual</button>`,
+        `<button type="button" class="list-menu-item" role="menuitem" data-list-action="rename"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16H4v-3l9.5-9.5z"/></svg>Renomear lista atual</button>`,
+        canDelete ? `<button type="button" class="list-menu-item is-danger" role="menuitem" data-list-action="delete"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 6h11M8 6V4.5h4V6M6 6l.7 9.5a1.5 1.5 0 0 0 1.5 1.4h3.6a1.5 1.5 0 0 0 1.5-1.4L14 6"/></svg>Excluir lista atual</button>` : '',
+        `<div class="list-menu-sep" role="separator"></div>`,
+        `<button type="button" class="list-menu-item" role="menuitem" data-list-action="export"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3-3m3 3 3-3M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>Exportar backup (.json)</button>`,
+        `<button type="button" class="list-menu-item" role="menuitem" data-list-action="import"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 12V3m0 0-3 3m3-3 3 3M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>Importar backup (.json)</button>`,
+        `<div class="list-menu-sep" role="separator"></div>`,
+        isBuiltIn ? `<button type="button" class="list-menu-item" role="menuitem" data-list-action="reset-current"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10a7 7 0 1 0 2.05-4.95L3 7"/><path d="M3 3v4h4"/></svg>Restaurar "${escapeHtml(currentName)}"</button>` : '',
+        `<button type="button" class="list-menu-item is-danger" role="menuitem" data-list-action="reset-all"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10a7 7 0 1 0 2.05-4.95L3 7"/><path d="M3 3v4h4"/></svg>Restaurar tudo</button>`
+      ].filter(Boolean).join('');
+
+      listMenuPopover.innerHTML = itemsHtml;
+      listMenuPopover.classList.add('is-open');
+      listMenuBtn.setAttribute('aria-expanded', 'true');
+
+      const rect = listMenuBtn.getBoundingClientRect();
+      const popW = listMenuPopover.offsetWidth || 216;
+      const popH = listMenuPopover.offsetHeight || 260;
+      const left = Math.min(Math.max(8, rect.left), window.innerWidth - popW - 8);
+      const top = rect.bottom + 8 + popH <= window.innerHeight - 8 ? rect.bottom + 8 : Math.max(8, rect.top - popH - 8);
+      listMenuPopover.style.left = `${left}px`;
+      listMenuPopover.style.top = `${top}px`;
+
+      listMenuPopover.querySelectorAll('[data-list-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.listAction;
+          closeListMenu();
+          if (action === 'new') {
+            const rawName = window.prompt('Nome da nova lista (ex.: Hortifruti, Padaria, Loja Centro):', '');
+            const name = (rawName || '').trim();
+            if (!name) return;
+            const id = 'custom-' + Date.now().toString(36);
+            listsMeta.push({ id, name });
+            saveListsMeta();
+            const starter = [{ name: 'Novo item', unit: 'unidade · 1 un', max: 20, min: 12, shelf: 30, color: palette[0], curveParams: null, visible: true }];
+            localStorage.setItem(presetStorageKey(id), JSON.stringify(starter));
+            renderPresetSelect();
+            switchActivePreset(id);
+          } else if (action === 'duplicate') {
+            const rawName = window.prompt('Nome da lista duplicada:', `${getListName(activePreset)} (cópia)`);
+            const name = (rawName || '').trim();
+            if (!name) return;
+            const id = 'custom-' + Date.now().toString(36);
+            listsMeta.push({ id, name });
+            saveListsMeta();
+            const cloned = products.map((product, index) => ({ ...JSON.parse(JSON.stringify(product)), visible: visible[index] !== false }));
+            localStorage.setItem(presetStorageKey(id), JSON.stringify(cloned));
+            renderPresetSelect();
+            switchActivePreset(id);
+          } else if (action === 'rename') {
+            const found = listsMeta.find(item => item.id === activePreset);
+            if (!found) return;
+            const rawName = window.prompt('Novo nome da lista:', found.name);
+            const name = (rawName || '').trim();
+            if (!name) return;
+            found.name = name;
+            saveListsMeta();
+            renderPresetSelect();
+          } else if (action === 'delete') {
+            if (listsMeta.length <= 1) return;
+            const found = listsMeta.find(item => item.id === activePreset);
+            if (!found) return;
+            if (!window.confirm(`Excluir a lista "${found.name}"?`)) return;
+            const currentIdx = listsMeta.findIndex(item => item.id === activePreset);
+            listsMeta = listsMeta.filter(item => item.id !== activePreset);
+            saveListsMeta();
+            localStorage.removeItem(presetStorageKey(activePreset));
+            const nextList = listsMeta[Math.min(currentIdx, listsMeta.length - 1)] || listsMeta[0];
+            renderPresetSelect();
+            switchActivePreset(nextList.id);
+          } else if (action === 'export') {
+            exportAllLists();
+          } else if (action === 'import') {
+            importListsInput.value = '';
+            importListsInput.click();
+          } else if (action === 'reset-current') {
+            if (!isBuiltInPreset(activePreset)) return;
+            if (!window.confirm(`Restaurar os itens padrão da lista "${getListName(activePreset)}"?`)) return;
+            rememberProducts();
+            const found = listsMeta.find(item => item.id === activePreset);
+            if (found) {
+              found.name = builtInPresetLabels[activePreset];
+              saveListsMeta();
+            }
+            localStorage.removeItem(presetStorageKey(activePreset));
+            renderPresetSelect();
+            switchActivePreset(activePreset);
+          } else if (action === 'reset-all') {
+            if (!window.confirm('Limpar todas as listas e ajustes salvos do Produto Fresco neste navegador?')) return;
+            clearAppStorage();
+            window.location.reload();
+          }
+        });
+      });
+    }
+
+    renderPresetSelect();
+    presetSelect.addEventListener('change', () => {
+      switchActivePreset(presetSelect.value);
     });
-    document.querySelector('#reset-storage').addEventListener('click', () => {
-      if (!window.confirm('Limpar os dados salvos neste navegador e restaurar as listas padrão?')) return;
-      localStorage.clear();
-      window.location.reload();
+    listMenuBtn.addEventListener('click', () => {
+      if (listMenuPopover.classList.contains('is-open')) closeListMenu();
+      else openListMenu();
     });
+    importListsInput.addEventListener('change', () => {
+      handleImportFile(importListsInput.files && importListsInput.files[0]);
+    });
+    function handleOutsideListMenu(event) {
+      if (listMenuPopover.classList.contains('is-open') && !event.target.closest('#list-menu-popover, #list-menu-btn')) {
+        closeListMenu();
+      }
+    }
+    document.addEventListener('pointerdown', handleOutsideListMenu, { capture: true, passive: true });
+    document.addEventListener('click', handleOutsideListMenu);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && listMenuPopover.classList.contains('is-open')) closeListMenu();
+    });
+    window.addEventListener('scroll', () => {
+      if (listMenuPopover.classList.contains('is-open')) closeListMenu();
+    }, { capture: true, passive: true });
+    window.addEventListener('resize', () => {
+      if (listMenuPopover.classList.contains('is-open')) closeListMenu();
+    }, { passive: true });
 
     function updateProductPanel() {
       list.querySelectorAll('.product-card').forEach((card, index) => {
