@@ -1425,7 +1425,7 @@
   <div class="list-menu-popover" id="list-menu-popover" role="menu" aria-label="Opções da lista"></div>
   <script>
     const defaults = [
-      { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#dc4c4c' },
+      { name: 'Ovos brancos', unit: 'bandeja · 30 unidades', max: 19.90, min: 12.90, shelf: 30, color: '#c03939' },
       { name: 'Ovos vermelhos', unit: 'bandeja · 30 unidades', max: 24.90, min: 14.90, shelf: 30, color: '#ee7820' },
       { name: 'Ovos caipiras', unit: 'bandeja · 20 unidades', max: 29.90, min: 16.90, shelf: 30, color: '#e3b519' },
       { name: 'Leite fresco', unit: 'garrafa · 1 litro', max: 9.90, min: 4.90, shelf: 30, color: '#39b35b' },
@@ -1439,15 +1439,15 @@
     let savedCurveSettings = {};
     try { savedCurveSettings = JSON.parse(localStorage.getItem(curveSettingsKey) || '{}') || {}; } catch (_) {}
     const colorSwatches = [
-      { hex: '#cf478c', label: 'Magenta' },
+      { hex: '#e77e89', label: 'Rosa' },
       { hex: '#ee7820', label: 'Laranja' },
       { hex: '#e3b519', label: 'Amarelo' },
       { hex: '#39b35b', label: 'Verde' },
       { hex: '#6daae8', label: 'Azul celeste' },
-      { hex: '#e388a2', label: 'Rosa' },
+      { hex: '#f056b3', label: 'Magenta' },
       { hex: '#cac4bc', label: 'Cinza claro' },
       { hex: '#a09a92', label: 'Cinza médio claro' },
-      { hex: '#dc4c4c', label: 'Vermelho' },
+      { hex: '#c03939', label: 'Vermelho' },
       { hex: '#8f4f2c', label: 'Terracota' },
       { hex: '#627a2c', label: 'Verde-oliva' },
       { hex: '#1d838e', label: 'Ciano' },
@@ -1477,7 +1477,7 @@
       laticinios: [
         defaults[3], defaults[4],
         { name: 'Manteiga', unit: 'pote · 500 ml', max: 24.90, min: 15.90, shelf: 60, color: '#e3b519' },
-        { name: 'Requeijão cremoso', unit: 'pote · 200 g', max: 12.90, min: 7.90, shelf: 45, color: '#cf478c' },
+        { name: 'Requeijão cremoso', unit: 'pote · 200 g', max: 12.90, min: 7.90, shelf: 45, color: '#f056b3' },
         { name: 'Iogurte natural integral', unit: 'pote · 500 g', max: 14.90, min: 8.90, shelf: 30, color: '#733eb5' }
       ],
       carne: [
