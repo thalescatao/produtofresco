@@ -1817,8 +1817,6 @@
 
     function openListMenu() {
       closeColorPopover();
-      const isBuiltIn = isBuiltInPreset(activePreset);
-      const currentName = getListName(activePreset);
       const canDelete = listsMeta.length > 1;
       const itemsHtml = [
         `<button type="button" class="list-menu-item" role="menuitem" data-list-action="new"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>Nova lista</button>`,
@@ -1829,7 +1827,6 @@
         `<button type="button" class="list-menu-item" role="menuitem" data-list-action="export"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m0 0-3-3m3 3 3-3M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>Exportar backup (.json)</button>`,
         `<button type="button" class="list-menu-item" role="menuitem" data-list-action="import"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 12V3m0 0-3 3m3-3 3 3M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14"/></svg>Importar backup (.json)</button>`,
         `<div class="list-menu-sep" role="separator"></div>`,
-        isBuiltIn ? `<button type="button" class="list-menu-item" role="menuitem" data-list-action="reset-current"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10a7 7 0 1 0 2.05-4.95L3 7"/><path d="M3 3v4h4"/></svg>Restaurar "${escapeHtml(currentName)}"</button>` : '',
         `<button type="button" class="list-menu-item is-danger" role="menuitem" data-list-action="reset-all"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10a7 7 0 1 0 2.05-4.95L3 7"/><path d="M3 3v4h4"/></svg>Restaurar tudo</button>`
       ].filter(Boolean).join('');
 
@@ -1897,18 +1894,6 @@
           } else if (action === 'import') {
             importListsInput.value = '';
             importListsInput.click();
-          } else if (action === 'reset-current') {
-            if (!isBuiltInPreset(activePreset)) return;
-            if (!window.confirm(`Restaurar os itens padrão da lista "${getListName(activePreset)}"?`)) return;
-            rememberProducts();
-            const found = listsMeta.find(item => item.id === activePreset);
-            if (found) {
-              found.name = builtInPresetLabels[activePreset];
-              saveListsMeta();
-            }
-            localStorage.removeItem(presetStorageKey(activePreset));
-            renderPresetSelect();
-            switchActivePreset(activePreset);
           } else if (action === 'reset-all') {
             if (!window.confirm('Limpar todas as listas e ajustes salvos do Produto Fresco neste navegador?')) return;
             clearAppStorage();
