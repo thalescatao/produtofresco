@@ -171,6 +171,9 @@
     }
 
     .subdivision-heading {
+      min-height: 0;
+      align-items: center;
+      gap: 5px;
       padding: 0;
       border: 0;
       background: transparent;
@@ -178,19 +181,49 @@
       transition: opacity .15s, color .15s;
     }
 
+    .subdiv-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 11px;
+      flex: 0 0 auto;
+    }
+
+    .subdiv-check svg {
+      display: block;
+      width: 16px;
+      height: 11px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+
+    .subdiv-check .subdiv-x {
+      opacity: 0;
+      stroke-linecap: round;
+    }
+
+    .subdivision-heading[aria-pressed="true"] .subdiv-check .subdiv-x {
+      opacity: 1;
+    }
+
     .subdivision-heading:hover {
       color: var(--ink);
     }
 
     .subdivision-heading[aria-pressed="false"] {
-      opacity: .52;
+      opacity: .56;
+    }
+
+    .subdivision-heading[aria-pressed="false"] .subdiv-label {
       text-decoration: line-through;
     }
 
     .subdivision-heading[aria-pressed="true"] {
       color: var(--ink);
-      text-decoration: underline;
-      text-underline-offset: 3px;
     }
 
     .subdivision-control:has(.subdivision-heading[aria-pressed="false"]) #subdivisions,
@@ -1087,8 +1120,8 @@
                 id="curvature-value">1,5</span></div>
           </div>
           <div class="curve-control curvature-control subdivision-control">
-            <button class="subdivision-heading" id="subdivisions-enabled" type="button" aria-pressed="false">&lt; Subdivisões &gt;</button>
-            <div class="curvature-line"><input id="subdivisions" type="range" min="2" max="5" step="1" value="3"
+            <button class="subdivision-heading" id="subdivisions-enabled" type="button" aria-pressed="false"><span class="subdiv-check" aria-hidden="true"><svg viewBox="0 0 16 11"><path d="M4.2 1.2H1.4v8.6h2.8M11.8 1.2h2.8v8.6h-2.8"/><path class="subdiv-x" d="M6 3.5l4 4m0-4-4 4"/></svg></span><span class="subdiv-label">Subdivisões</span></button>
+            <div class="curvature-line"><input id="subdivisions" type="range" min="1" max="5" step="1" value="3"
                 aria-label="Número de patamares de preço entre o prazo de frescor e o prazo terminal de venda"><span class="curvature-value"
                 id="subdivisions-value">3</span></div>
           </div>
@@ -1211,7 +1244,7 @@
     let freshnessPct = Number.isInteger(savedCurveSettings.freshnessPct) && savedCurveSettings.freshnessPct >= 20 && savedCurveSettings.freshnessPct <= 50 ? savedCurveSettings.freshnessPct : 25;
     let terminalPct = Number.isInteger(savedCurveSettings.terminalPct) && savedCurveSettings.terminalPct >= 20 && savedCurveSettings.terminalPct <= 33 ? savedCurveSettings.terminalPct : 30;
     let curvature = Number.isFinite(savedCurveSettings.curvature) && savedCurveSettings.curvature >= 1 && savedCurveSettings.curvature <= 2 ? savedCurveSettings.curvature : 1.5;
-    let subdivisions = Number.isInteger(savedCurveSettings.subdivisions) && savedCurveSettings.subdivisions >= 2 && savedCurveSettings.subdivisions <= 5 ? savedCurveSettings.subdivisions : 3;
+    let subdivisions = Number.isInteger(savedCurveSettings.subdivisions) && savedCurveSettings.subdivisions >= 1 && savedCurveSettings.subdivisions <= 5 ? savedCurveSettings.subdivisions : 3;
     let subdivisionsEnabled = savedCurveSettings.subdivisionsEnabled === true;
     let selected = null;
     let hovered = null;
@@ -1907,7 +1940,6 @@
     subdivisionsValueDisplay.textContent = String(subdivisions);
     function updateSubdivisionsToggle() {
       subdivisionsToggle.setAttribute('aria-pressed', String(subdivisionsEnabled));
-      subdivisionsToggle.textContent = subdivisionsEnabled ? '> Subdivisões <' : '< Subdivisões >';
     }
     updateSubdivisionsToggle();
     subdivisionsToggle.addEventListener('click', () => {
