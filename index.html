@@ -346,10 +346,6 @@
       white-space: nowrap;
     }
 
-    .terminal-label-mobile {
-      display: none;
-    }
-
     .subdivision-heading {
       min-height: 0;
       align-items: center;
@@ -1369,14 +1365,6 @@
         font-size: 11.5px;
       }
 
-      .terminal-label-desktop {
-        display: none;
-      }
-
-      .terminal-label-mobile {
-        display: inline;
-      }
-
       .curvature-line {
         height: 36px;
       }
@@ -1513,7 +1501,7 @@
             <div class="curvature-line"><input id="freshness-days" type="range" min="20" max="50" step="1" value="25" aria-label="Percentual da validade em que o preço permanece no máximo após a produção"><span class="curvature-value" id="freshness-days-value">25%</span></div>
           </div>
           <div class="curve-control">
-            <label for="terminal-days"><span class="param-label-text"><span class="terminal-label-desktop">Prazo final de venda</span><span class="terminal-label-mobile">Prazo final</span><sup class="param-footnote-ref" id="terminal-footnote-ref" hidden>2</sup></span></label>
+            <label for="terminal-days"><span class="param-label-text">Prazo final de venda<sup class="param-footnote-ref" id="terminal-footnote-ref" hidden>2</sup></span></label>
             <div class="curvature-line"><input id="terminal-days" type="range" min="0" max="33" step="1" value="30" aria-label="Percentual final da validade em que o preço permanece no mínimo"><span class="curvature-value" id="terminal-days-value">30%</span></div>
           </div>
           <div class="curve-control curvature-control">
