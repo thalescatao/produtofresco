@@ -2586,16 +2586,28 @@
       updateProductPanel();
     }
 
-    wrap.addEventListener('mousemove', event => {
-      if (!products.length) { tooltip.style.display = "none"; return; }
+    function hideChartTooltip() {
+      tooltip.style.display = 'none';
+      if (hovered !== null) { hovered = null; drawChart(); }
+      else updateProductPanel();
+    }
+
+    function updateChartTooltip(event) {
+      if (!products.length) { tooltip.style.display = 'none'; return; }
       const box = wrap.getBoundingClientRect();
       const width = box.width;
       const height = box.height;
+      const cursorX = event.clientX - box.left;
+      const cursorY = event.clientY - box.top;
       const padLeft = width < 500 ? 51 : 60;
       const padRight = width < 500 ? 18 : 27;
-      const day = Math.max(0, Math.min(maxDays, (event.clientX - box.left - padLeft) / (width - padLeft - padRight) * maxDays));
       const chartTop = 15;
-      const chartBottom = width < 500 ? 45 : 48;
+      const chartBottom = mobileRangeQuery.matches ? 26 : (width < 500 ? 45 : 48);
+      if (cursorX < padLeft || cursorX > width - padRight || cursorY < chartTop || cursorY > height - chartBottom) {
+        hideChartTooltip();
+        return;
+      }
+      const day = Math.max(0, Math.min(maxDays, (cursorX - padLeft) / (width - padLeft - padRight) * maxDays));
       const values = products.length ? products.flatMap(product => [product.max, product.min]) : [0, 1];
       const minValue = Math.max(0, Math.floor(Math.min(...values) / 10) * 10);
       const maxValue = Math.ceil(Math.max(...values) / 10) * 10;
@@ -2643,14 +2655,21 @@
       tooltip.style.display = 'block';
       const tipW = tooltip.offsetWidth || 210;
       const tipH = tooltip.offsetHeight || 160;
-      const cursorX = event.clientX - box.left;
-      const cursorY = event.clientY - box.top;
       const leftPos = cursorX + 16 + tipW <= width - 8 ? cursorX + 16 : Math.max(8, cursorX - tipW - 16);
       const topPos = Math.min(Math.max(6, cursorY - 18), Math.max(6, height - tipH - 6));
       tooltip.style.left = `${leftPos}px`;
       tooltip.style.top = `${topPos}px`;
+    }
+    wrap.addEventListener('mousemove', updateChartTooltip);
+    wrap.addEventListener('pointerdown', event => {
+      if (event.pointerType === 'touch') updateChartTooltip(event);
     });
-    wrap.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; if (hovered !== null) { hovered = null; drawChart(); } else updateProductPanel(); });
+    wrap.addEventListener('mouseleave', hideChartTooltip);
+    document.addEventListener('pointerdown', event => {
+      if (tooltip.style.display === 'block' && !event.target.closest('#chart-wrap')) {
+        hideChartTooltip();
+      }
+    }, { capture: true, passive: true });
     document.addEventListener('click', event => {
       if (event.target.closest('.product-card, [data-product], #color-popover')) return;
       if (selected !== null || hovered !== null) {
