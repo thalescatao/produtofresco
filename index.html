@@ -182,8 +182,60 @@
     .brand {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .brand-identity {
       flex: 0 0 auto;
-      min-width: max-content;
+      white-space: nowrap;
+    }
+
+    .brand-footnotes {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-inline: auto;
+      padding-inline: 16px;
+      min-width: 0;
+      text-align: left;
+      color: var(--muted);
+      opacity: 0.58;
+      font-size: 10.5px;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .brand-footnote-item {
+      margin: 0;
+      text-wrap: balance;
+    }
+
+    .brand-footnote-item.is-hidden {
+      visibility: hidden;
+    }
+
+    .param-label-text {
+      position: relative;
+      display: inline-block;
+    }
+
+    .param-footnote-ref {
+      position: absolute;
+      left: calc(100% + 2px);
+      top: -4px;
+      color: var(--muted);
+      opacity: 0.85;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .param-footnote-ref[hidden] {
+      display: none;
     }
 
     .brand-name {
@@ -254,19 +306,20 @@
     .header-controls {
       display: flex;
       min-width: 0;
-      flex: 1 1 auto;
+      flex: 0 1 auto;
       align-items: center;
       justify-content: flex-end;
-      gap: 24px;
+      gap: 20px;
     }
 
     .curve-controls {
       display: grid;
       min-width: 0;
-      flex: 0 1 648px;
-      grid-template-columns: repeat(4, minmax(112px, 1fr));
+      width: clamp(560px, 44vw, 720px);
+      flex: 0 1 auto;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
       align-items: stretch;
-      gap: 18px;
+      gap: 20px;
     }
 
     .curve-control {
@@ -446,6 +499,9 @@
       top: 22px;
       left: 50%;
       transform: translateX(-50%);
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
       white-space: nowrap;
       color: var(--ink);
@@ -455,6 +511,8 @@
       line-height: 1.2;
       pointer-events: none;
     }
+
+
 
     .range-switch {
       display: inline-flex;
@@ -993,9 +1051,36 @@
     .chart-heading {
       position: relative;
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .chart-heading-row {
+      position: relative;
+      display: flex;
+      width: 100%;
       align-items: center;
       justify-content: center;
+    }
+
+    .chart-x-footer {
+      display: none;
+    }
+
+    .chart-x-caption {
+      flex: 1 1 auto;
       text-align: center;
+      padding-left: 18px;
+      color: var(--chart-muted);
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .chart-range-slot {
+      display: inline-flex;
+      align-items: center;
     }
 
     .chart-heading h2 {
@@ -1106,10 +1191,19 @@
       font-weight: 600;
     }
 
-    @media (max-width: 1080px) {
+    @media (max-width: 1340px) {
       .topbar {
         flex-wrap: wrap;
-        gap: 15px 18px;
+        gap: 14px 20px;
+      }
+
+      .brand {
+        flex: 1 1 100%;
+      }
+
+      .brand-footnotes {
+        margin-inline: auto 0;
+        padding-inline: 0;
       }
 
       .header-controls {
@@ -1119,8 +1213,10 @@
       }
 
       .curve-controls {
+        width: auto;
         flex: 1 1 auto;
-        gap: 12px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
       }
     }
 
@@ -1152,60 +1248,32 @@
       }
     }
 
-    @media (max-width: 600px) {
-      .app {
-        padding: 15px 12px 21px;
-        gap: 12px;
-      }
-
+    @media (max-width: 760px) {
       .topbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         align-items: center;
         gap: 12px;
       }
 
       .brand {
         min-width: 0;
+        width: 100%;
+        justify-content: space-between;
+        gap: 20px;
       }
 
-      .brand-name {
-        font-size: 19px;
-      }
-
-      .brand-caption {
-        font-size: 12px;
-      }
-
-      .brand-credit {
-        right: 0;
-        gap: 5px;
-        font-size: 11px;
-      }
-
-      .brand-author-link {
-        width: 20px;
-        height: 20px;
+      .brand-footnotes {
+        margin-left: auto;
+        max-width: 185px;
+        text-align: right;
+        white-space: normal;
+        font-size: 10px;
+        line-height: 1.3;
       }
 
       .header-controls {
         display: contents;
-      }
-
-      .range-switch {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-        padding: 3px 8px 3px 3px;
-      }
-
-      .range-switch button {
-        padding: 6px 8px;
-        font-size: 12.5px;
-      }
-
-      .range-unit {
-        font-size: 11px;
       }
 
       .curve-controls {
@@ -1217,6 +1285,77 @@
         border: 1px solid var(--line);
         border-radius: 14px;
         background: var(--paper);
+      }
+
+      .brand-credit {
+        right: 0;
+        gap: 4px;
+        font-size: 11px;
+      }
+
+      .brand-author-link {
+        width: 20px;
+        height: 20px;
+      }
+
+      .chart-x-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 6px;
+        padding: 0 2px;
+      }
+
+      .range-switch {
+        padding: 2px 7px 2px 2px;
+      }
+
+      .range-switch button {
+        padding: 4px 7px;
+        font-size: 12px;
+      }
+
+      .range-unit {
+        font-size: 10.5px;
+        margin-left: 2px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 15px 12px 21px;
+        gap: 12px;
+      }
+
+      .brand {
+        gap: 18px;
+      }
+
+      .brand-footnotes {
+        max-width: 160px;
+      }
+
+      .brand-name {
+        font-size: 19px;
+      }
+
+      .brand-caption {
+        font-size: 12px;
+      }
+
+      .range-switch {
+        padding: 2px 6px 2px 2px;
+      }
+
+      .range-switch button {
+        padding: 4px 6px;
+        font-size: 11.5px;
+      }
+
+      .range-unit {
+        font-size: 10px;
+        margin-left: 2px;
       }
 
       .curve-control {
@@ -1358,20 +1497,24 @@
   <main class="app">
     <header class="topbar">
       <div class="brand">
-        <div>
+        <div class="brand-identity">
           <p class="brand-name"><a href="https://thalescatao.github.io/" target="_blank" rel="noopener">Produto Fresco</a></p>
           <p class="brand-caption">o valor certo, no tempo certo</p>
+        </div>
+        <div class="brand-footnotes" id="param-footnotes" aria-live="polite">
+          <p class="brand-footnote-item is-hidden" id="footnote-slot-1">1 - Indicado para produtos de validade mais longa.</p>
+          <p class="brand-footnote-item is-hidden" id="footnote-slot-2">2 - Use o preço de custo como mínimo e mais subdivisões.</p>
         </div>
       </div>
       <div class="header-controls">
         <div class="curve-controls">
           <div class="curve-control">
-            <label for="freshness-days">Período de frescor</label>
+            <label for="freshness-days"><span class="param-label-text">Período de frescor<sup class="param-footnote-ref" id="freshness-footnote-ref" hidden>1</sup></span></label>
             <div class="curvature-line"><input id="freshness-days" type="range" min="20" max="50" step="1" value="25" aria-label="Percentual da validade em que o preço permanece no máximo após a produção"><span class="curvature-value" id="freshness-days-value">25%</span></div>
           </div>
           <div class="curve-control">
-            <label for="terminal-days"><span class="terminal-label-desktop">Prazo final de venda</span><span class="terminal-label-mobile">Prazo final</span></label>
-            <div class="curvature-line"><input id="terminal-days" type="range" min="20" max="33" step="1" value="30" aria-label="Percentual final da validade em que o preço permanece no mínimo"><span class="curvature-value" id="terminal-days-value">30%</span></div>
+            <label for="terminal-days"><span class="param-label-text"><span class="terminal-label-desktop">Prazo final de venda</span><span class="terminal-label-mobile">Prazo final</span><sup class="param-footnote-ref" id="terminal-footnote-ref" hidden>2</sup></span></label>
+            <div class="curvature-line"><input id="terminal-days" type="range" min="0" max="33" step="1" value="30" aria-label="Percentual final da validade em que o preço permanece no mínimo"><span class="curvature-value" id="terminal-days-value">30%</span></div>
           </div>
           <div class="curve-control curvature-control">
             <label for="curvature">Fator de curvatura</label>
@@ -1408,14 +1551,20 @@
       </aside>
       <section class="panel chart-panel" aria-labelledby="chart-title">
         <div class="chart-heading">
-          <div>
-            <h2 id="chart-title">Curva de Preços</h2>
+          <div class="chart-heading-row">
+            <div>
+              <h2 id="chart-title">Curva de Preços</h2>
+            </div>
+            <span class="brand-credit">by <a class="brand-author-link" href="https://thalescatao.github.io/" target="_blank" rel="noopener" aria-label="Thales Catão — site principal" title="Thales Catão"><img src="https://thalescatao.github.io/favicon/favicon.svg" alt="Thales Catão" width="24" height="24"></a></span>
           </div>
-          <span class="brand-credit">by <a class="brand-author-link" href="https://thalescatao.github.io/" target="_blank" rel="noopener" aria-label="Thales Catão — site principal" title="Thales Catão"><img src="https://thalescatao.github.io/favicon/favicon.svg" alt="Thales Catão" width="24" height="24"></a></span>
         </div>
         <div class="chart-wrap" id="chart-wrap">
           <svg id="chart" role="img" aria-label="Gráfico de curvas de preço dos alimentos frescos"></svg>
           <div class="tooltip" id="tooltip"></div>
+        </div>
+        <div class="chart-x-footer" id="chart-x-footer">
+          <span class="chart-x-caption">Dias desde a produção</span>
+          <div class="chart-range-slot" id="chart-range-slot"></div>
         </div>
         <div class="chart-legend" id="chart-legend" aria-label="Produtos no gráfico"></div>
       </section>
@@ -1638,7 +1787,7 @@
     let maxDays = 30;
     let rangeProductSignature = null;
     let freshnessPct = Number.isInteger(savedCurveSettings.freshnessPct) && savedCurveSettings.freshnessPct >= 20 && savedCurveSettings.freshnessPct <= 50 ? savedCurveSettings.freshnessPct : 25;
-    let terminalPct = Number.isInteger(savedCurveSettings.terminalPct) && savedCurveSettings.terminalPct >= 20 && savedCurveSettings.terminalPct <= 33 ? savedCurveSettings.terminalPct : 30;
+    let terminalPct = Number.isInteger(savedCurveSettings.terminalPct) && savedCurveSettings.terminalPct >= 0 && savedCurveSettings.terminalPct <= 33 ? savedCurveSettings.terminalPct : 30;
     let curvature = Number.isFinite(savedCurveSettings.curvature) && savedCurveSettings.curvature >= 1 && savedCurveSettings.curvature <= 2 ? savedCurveSettings.curvature : 1.5;
     let subdivisions = Number.isInteger(savedCurveSettings.subdivisions) && savedCurveSettings.subdivisions >= 1 && savedCurveSettings.subdivisions <= 5 ? savedCurveSettings.subdivisions : 3;
     let subdivisionsEnabled = savedCurveSettings.subdivisionsEnabled === true;
@@ -1799,7 +1948,7 @@
           if (data.curveSettings && typeof data.curveSettings === 'object') {
             const cs = data.curveSettings;
             if (Number.isInteger(cs.freshnessPct) && cs.freshnessPct >= 20 && cs.freshnessPct <= 50) freshnessPct = cs.freshnessPct;
-            if (Number.isInteger(cs.terminalPct) && cs.terminalPct >= 20 && cs.terminalPct <= 33) terminalPct = cs.terminalPct;
+            if (Number.isInteger(cs.terminalPct) && cs.terminalPct >= 0 && cs.terminalPct <= 33) terminalPct = cs.terminalPct;
             if (Number.isFinite(cs.curvature) && cs.curvature >= 1 && cs.curvature <= 2) curvature = cs.curvature;
             if (Number.isInteger(cs.subdivisions) && cs.subdivisions >= 1 && cs.subdivisions <= 5) subdivisions = cs.subdivisions;
             if (typeof cs.subdivisionsEnabled === 'boolean') subdivisionsEnabled = cs.subdivisionsEnabled;
@@ -2358,7 +2507,7 @@
       const width = Math.max(280, bounds.width);
       const height = Math.max(300, bounds.height);
       const mobile = width < 500;
-      const pad = { top: 15, right: mobile ? 18 : 27, bottom: mobile ? 45 : 48, left: mobile ? 51 : 60 };
+      const pad = { top: 15, right: mobile ? 18 : 27, bottom: mobileRangeQuery.matches ? 26 : (mobile ? 45 : 48), left: mobile ? 51 : 60 };
       const innerW = width - pad.left - pad.right;
       const innerH = height - pad.top - pad.bottom;
       const axisFont = mobile ? 11 : 12;
@@ -2388,7 +2537,9 @@
         markup += `<line x1="${xx}" y1="${pad.top}" x2="${xx}" y2="${height - pad.bottom}" stroke="var(--chart-grid)" stroke-width="1"/>`;
         markup += `<text x="${xx}" y="${height - pad.bottom + 18}" fill="var(--chart-muted)" font-size="${axisFont}" text-anchor="middle">${day}</text>`;
       }
-      markup += `<text x="${pad.left + innerW / 2}" y="${height - 8}" fill="var(--chart-muted)" font-size="${axisFont}" font-weight="500" text-anchor="middle">Dias desde a produção</text>`;
+      if (!mobileRangeQuery.matches) {
+        markup += `<text x="${pad.left + innerW / 2}" y="${height - 8}" fill="var(--chart-muted)" font-size="${axisFont}" font-weight="500" text-anchor="middle">Dias desde a produção</text>`;
+      }
 
       products.forEach((product, index) => {
         if (!visible[index]) return;
@@ -2552,10 +2703,50 @@
       positionSliderValue(subdivisionsSlider, subdivisionsValueDisplay);
     }
 
+    const paramFootnotes = document.querySelector('#param-footnotes');
+    const freshnessFootnoteRef = document.querySelector('#freshness-footnote-ref');
+    const terminalFootnoteRef = document.querySelector('#terminal-footnote-ref');
+    const headerControlsEl = document.querySelector('.header-controls');
+    const rangeSwitchEl = document.querySelector('.range-switch');
+    const chartRangeSlot = document.querySelector('#chart-range-slot');
+    const mobileRangeQuery = window.matchMedia('(max-width: 760px)');
+
+    function syncRangeSwitchPlacement() {
+      if (!rangeSwitchEl || !headerControlsEl || !chartRangeSlot) return;
+      if (mobileRangeQuery.matches) {
+        if (rangeSwitchEl.parentElement !== chartRangeSlot) chartRangeSlot.appendChild(rangeSwitchEl);
+      } else if (rangeSwitchEl.parentElement !== headerControlsEl) {
+        headerControlsEl.appendChild(rangeSwitchEl);
+      }
+      requestAnimationFrame(() => {
+        positionAllSliderValues();
+        if (typeof drawChart === 'function') drawChart();
+      });
+    }
+    syncRangeSwitchPlacement();
+    if (typeof mobileRangeQuery.addEventListener === 'function') {
+      mobileRangeQuery.addEventListener('change', syncRangeSwitchPlacement);
+    } else if (typeof mobileRangeQuery.addListener === 'function') {
+      mobileRangeQuery.addListener(syncRangeSwitchPlacement);
+    }
+
+    const footnoteSlot1 = document.querySelector('#footnote-slot-1');
+    const footnoteSlot2 = document.querySelector('#footnote-slot-2');
+
+    function updateExtremeFootnotes() {
+      const showFreshnessNote = freshnessPct === 50;
+      const showTerminalNote = terminalPct === 0;
+      if (freshnessFootnoteRef) freshnessFootnoteRef.hidden = !showFreshnessNote;
+      if (terminalFootnoteRef) terminalFootnoteRef.hidden = !showTerminalNote;
+      if (footnoteSlot1) footnoteSlot1.classList.toggle('is-hidden', !showFreshnessNote);
+      if (footnoteSlot2) footnoteSlot2.classList.toggle('is-hidden', !showTerminalNote);
+    }
+
     terminalDaysSlider.addEventListener('input', event => {
       terminalPct = Number(event.currentTarget.value);
       terminalDaysValueDisplay.textContent = `${terminalPct}%`;
       positionSliderValue(terminalDaysSlider, terminalDaysValueDisplay);
+      updateExtremeFootnotes();
       saveCurveSettings();
       drawChart();
     });
@@ -2563,6 +2754,7 @@
       freshnessPct = Number(event.currentTarget.value);
       freshnessDaysValueDisplay.textContent = `${freshnessPct}%`;
       positionSliderValue(freshnessDaysSlider, freshnessDaysValueDisplay);
+      updateExtremeFootnotes();
       saveCurveSettings();
       drawChart();
     });
@@ -2586,6 +2778,7 @@
     subdivisionsSlider.value = String(subdivisions);
     freshnessDaysValueDisplay.textContent = `${freshnessPct}%`;
     terminalDaysValueDisplay.textContent = `${terminalPct}%`;
+    updateExtremeFootnotes();
     curvatureValueDisplay.textContent = curvature.toFixed(1).replace('.', ',');
     subdivisionsValueDisplay.textContent = String(subdivisions);
     function updateSubdivisionsToggle() {
